@@ -1,0 +1,46 @@
+# Copyright (2019-2020) Robotics Systems Lab - ETH Zurich:
+# Jonas Junger, Johannes Pankert, Fabio Dubois, Lennart Nachtigall,
+# Markus Staeuble
+#
+# This file is part of the elmo_ethercat_sdk.
+# The elmo_ethercat_sdk is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The elmo_ethercat_sdk is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
+
+ElmoEthercat: # configuration options for the ElmoEthercat class (can be left out, the defaults usually work good)
+  PRINT_ERROR_MESSAGE: true
+  SDO_VERIFY_TIMEOUT: 21001
+  USE_RAW_COMMANDS: false # is false if left out
+
+ElmoEthercatSlave: # configuration options for the ElmoEthercatSlave class (can be left out, the defaults usually work good)
+  DRIVE_STATE_CHANGE_MIN_TIMEOUT: 1000
+  DRIVE_STATE_CHANGE_MAX_TIMEOUT: 1000000
+  MIN_NUMBER_OF_SUCCESSFUL_TARGET_STATE_READINGS: 50
+  PRINT_ERROR_MESSAGE: true
+
+Reading:
+  ERROR_STORAGE_CAPACITY: 312
+  FAULT_STORAGE_CAPACITY: 412
+  FORCE_APPEND_EQUAL_ERROR: true
+  FORCE_APPEND_EQUAL_FAULT: false
+
+Hardware:
+  RX_PDO_TYPE: "RxPdoStandard" # only allowed option for changing modes of operation
+  TX_PDO_TYPE: "TxPdoStandard" # only allowed option for changing modes of operation
+  USE_MULTIPLE_MODE_OF_OPERATIONS: true # this must be set to true if the mode of operation must be changed during the communication
+  MODE_OF_OPERATION: "CyclicSynchronousVelocityMode" # the first mode of operation being set after startup (required)
+  POSITION_ENCODER_RESOLUTION: 1048576 # motor encoder resolution in bits (used for commutation)
+
+  GEAR_RATIO: [10,1] # [motor revolutions, output revolutions]
+  MOTOR_CONSTANT: 1.0 # [Nm/A] motor torque constant
+  MAX_CURRENT: 2.0 # [A] max IQ current
+  MOTOR_RATED_CURRENT: 1.5 # [A] motor rated current (used for normalization of 16bit integer value, 1/1000 resolution)

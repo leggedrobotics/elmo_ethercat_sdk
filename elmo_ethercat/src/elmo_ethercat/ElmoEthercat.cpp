@@ -631,6 +631,11 @@ bool ElmoEthercat::mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeE
   return (static_cast<int>(txSuccess) & static_cast<int>(rxSuccess)) != 0;
 }
 
+void ElmoEthercat::setSlavePointer(const ElmoEthercatSlavePtr& slavePtr) {
+  slavePtr_ = slavePtr;
+  name_ = slavePtr_->getName();
+}
+
 // Sdo write template specialization
 template <>
 bool ElmoEthercat::sendSdoWrite(const uint16_t index, const uint8_t subindex, const bool completeAccess, const int8_t value) {

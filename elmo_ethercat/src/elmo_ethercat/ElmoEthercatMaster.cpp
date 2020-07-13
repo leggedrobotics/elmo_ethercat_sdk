@@ -92,12 +92,18 @@ bool ElmoEthercatMaster::loadSetup(const std::string& setupFile) {
       // Get address of slave
       if (elmoSetup[i]["ethercat_address"].IsDefined()) {
         int address = elmoSetup[i]["ethercat_address"].as<int>();
+        // Get name of slave
+        if (elmoSetup[i]["name"].IsDefined()) {
+          std::string nameOfDrive = elmoSetup[i]["name]"].as<std::string>();
+          ElmoEthercatPtr elmodrivePtr = std::make_shared<ElmoEthercat>();
+          elmo::ethercat::ElmoEthercatSlavePtr slavePtr = std::make_shared<ElmoEthercatSlave>(nameOfDrive, getBus(), address);
+          bus_->addSlave(slavePtr);
+          elmodrivePtr->setSlavePointer(slavePtr);
+          addElmodrive(elmodrivePtr);
 
-        ElmoEthercatPtr elmodrivePtr = std::make_shared<ElmoEthercat>();
-        elmo::ethercat::ElmoEthercatSlavePtr slavePtr = std::make_shared<ElmoEthercatSlave>(elmodrivePtr->getName(), getBus(), address);
-        bus_->addSlave(slavePtr);
-        elmodrivePtr->setSlavePointer(slavePtr);
-        addElmodrive(elmodrivePtr);
+        } else {
+          MELO_ERROR_STREAM("Elmo: " << i << "name not defined");
+        }
       } else {
         MELO_ERROR_STREAM("Elmo: " << i << " had no entry: ethercat_address");
       }

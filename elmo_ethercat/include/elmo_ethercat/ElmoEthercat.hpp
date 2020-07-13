@@ -193,7 +193,7 @@ class ElmoEthercat : public Elmo {
   bool getReady(bool waitForOperationEnabled = true);
 
   // set the corresponding slave pointer
-  void setSlavePointer(const ElmoEthercatSlavePtr& slavePtr) { slavePtr_ = slavePtr; }
+  void setSlavePointer(const ElmoEthercatSlavePtr& slavePtr);
 
   /*!
    * @brief	Return the name of the slave

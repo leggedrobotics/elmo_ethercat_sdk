@@ -94,7 +94,7 @@ bool ElmoEthercatMaster::loadSetup(const std::string& setupFile) {
         int address = elmoSetup[i]["ethercat_address"].as<int>();
         // Get name of slave
         if (elmoSetup[i]["name"].IsDefined()) {
-          std::string nameOfDrive = elmoSetup[i]["name]"].as<std::string>();
+          std::string nameOfDrive = elmoSetup[i]["name"].as<std::string>();
           ElmoEthercatPtr elmodrivePtr = std::make_shared<ElmoEthercat>();
           elmo::ethercat::ElmoEthercatSlavePtr slavePtr = std::make_shared<ElmoEthercatSlave>(nameOfDrive, getBus(), address);
           bus_->addSlave(slavePtr);

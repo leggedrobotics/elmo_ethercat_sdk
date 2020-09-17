@@ -1,0 +1,122 @@
+#+TITLE: Tmp
+#+BEGIN_SRC cpp :exports code
+#pragma once
+
+#include <atomic>
+#include <chrono>
+#include <elmo/Command.hpp>
+#include <elmo/Controlword.hpp>
+#include <memory>
+#include <mutex>
+#include <soem_interface/EthercatBusBase.hpp>
+#include <soem_interface/EthercatSlaveBase.hpp>
+#include <string>
+
+#include <elmo_ethercat/Configuration.hpp>
+#include <elmo_ethercat/PdoTypeEnum.hpp>
+#include <elmo_ethercat/Reading.hpp>
+#include <elmo_ethercat/RxPdo.hpp>
+#include <elmo_ethercat/TxPdo.hpp>
+
+namespace elmo {
+namespace ethercat {
+
+class ElmoEthercatSlave : public soem_interface::EthercatSlaveBase {
+ public:
+ private:
+  const std::string name_;  // to be set in constructor
+
+  // mutexes
+  std::recursive_mutex mutex_;
+
+  // Command object
+  Command command_;
+
+  // Reading
+  Reading reading_;
+
+  PdoInfo pdoInfo_;
+
+  /*! Will be true after the first updateRead has occured
+   * This is needed because some buses will write first and then read
+   * only manipulate this inside of a lock guard (locking mutex_)!
+   */
+  bool hasRead_{false};
+
+  /*!
+   * This flag indicates whether a change of the drive state should be conducted
+   * during PDO sending phase only manipulate this inside of a lock guard
+   * (locking mutex_)!
+   */
+  bool conductStateChange_{false};
+
+  /*!
+   * This is the target drive state
+   * when the "conductStateChange" variable is set to true, the PDO state
+   * machine will try to reach the target state only manipulate this inside of a
+   * lock guard (locking mutex_)!
+   */
+  DriveState targetDriveState_{DriveState::NA};
+
+  /*!
+   * This is the controlword which will be sent to the hardware
+   * This is stored in a separate variable because if no state change is
+   * conducted, the last controlword should be sent. the updateWrite method
+   * cannot be made static because different instances of "ElmoEthercatSlave"
+   * will probably be acting differently at the same time only manipulate this
+   * inside of a lock guard (locking mutex_)!
+   */
+  Controlword controlword_;
+
+  /*!
+   * This is the Configuration object used for the unit conversions when setting
+   * a new command. Loading this Configuration from a file rather than
+   * hardcoding it is recommended.
+   */
+  Configuration configuration_;
+
+  /*!
+   * This is the time point of the last pdo drive state change
+   * It is needed because changing the drive states too quickly results in a bad
+   * behaviour
+   */
+  std::chrono::time_point<std::chrono::steady_clock> driveStateChangeTimePoint_;
+
+  /*!
+   * This is the number of times a desired state has been reached.
+   * Only if this value is above a predefined threshold the state change is
+   * called successful. The reason for this is an unstable behaviour of the
+   * elmos, mostly during startup procedure only manipulate this inside of a
+   * lock guard (locking mutex_)!
+   */
+  uint16_t numberOfSuccessfulTargetStateReadings_{0};
+
+  /*!
+   * indicates whether a state change was successful or not
+   * This is used to prevent changing states before the previous state
+   * transition finished which could create a mess in the state mahine This
+   * variable must be set to false whenever a state change is initialized. It
+   * should only be set to true insied of the "engagePdoStateMachine" method
+   * only manipulate this inside of a lock guard (locking mutex_)!
+   */
+  bool stateChangeSuccessful_{false};
+
+  /*!
+   * Configuration parameters
+   * These parameters can be set with a Configuration object
+   */
+  unsigned int driveStateChangeMinTimeout_{20000};
+  unsigned int driveStateChangeMaxTimeout_{300000};
+  unsigned int minNumberOfSuccessfulTargetStateReadings_{10};
+  bool printErrorMessage_{true};
+  ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
+  bool allowModeChange_{false};
+
+};  // class ElmoEthercatSlave
+
+// alias for the shared pointer to the ElmoEthercatSlave pointer
+using ElmoEthercatSlavePtr = std::shared_ptr<ElmoEthercatSlave>;
+
+}  // namespace ethercat
+}  // namespace elmo
+#+END_SRC

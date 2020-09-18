@@ -70,6 +70,7 @@ add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/ConfigurationParser.cpp
   src/${PROJECT_NAME}/Reading.cpp
   src/${PROJECT_NAME}/Command.cpp
+  src/${PROJECT_NAME}/Controlword.cpp
   src/${PROJECT_NAME}/Statusword.cpp
 )
 add_dependencies(

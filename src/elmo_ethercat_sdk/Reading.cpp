@@ -23,9 +23,7 @@
 
 #include "elmo_ethercat_sdk/Reading.hpp"
 
-namespace elmo {
-
-std::ostream& operator<<(std::ostream& os, Reading& reading) {
+std::ostream& operator<<(std::ostream& os, elmo::Reading& reading) {
   // TODO(duboisf) make table, remove statusword
   os << std::left << std::setw(30) << "Actual Position:" << reading.getActualPosition() << "\n"
      << std::setw(30) << "Actual Velocity:" << reading.getActualVelocity() << "\n"
@@ -39,6 +37,8 @@ std::ostream& operator<<(std::ostream& os, Reading& reading) {
      << reading.getStatusword() << std::right;
   return os;
 }
+
+namespace elmo{
 
 std::string Reading::getDigitalInputString() const {
   std::string binString;

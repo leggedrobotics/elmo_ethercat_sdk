@@ -51,6 +51,7 @@ class Configuration {
   double motorRatedCurrentA{0};
   double maxCurrentA{0};
   bool useMultipleModeOfOperations{false};
+  std::string name;
 
  public:
   // stream operator

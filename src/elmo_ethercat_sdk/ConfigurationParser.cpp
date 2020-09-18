@@ -176,13 +176,17 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
     /// A new node for the ElmoEthercat class
     YAML::Node elmoNode = configNode["Elmo"];
 
+    std::string name;
+    if (getValueFromFile(elmoNode, "NAME", name)){
+      configuration_.name = name;
+    }
     unsigned int configRunSdoVerifyTimeout;
     if (getValueFromFile(elmoNode, "CONFIG_RUN_SDO_VERIFY_TIMEOUT", configRunSdoVerifyTimeout)) {
       configuration_.configRunSdoVerifyTimeout = configRunSdoVerifyTimeout;
     }
 
     bool printDebugMessages;
-    if (getValueFromFile(elmoNode, "PRINT_DEBUG_MESSAGE", printDebugMessages)) {
+    if (getValueFromFile(elmoNode, "PRINT_DEBUG_MESSAGES", printDebugMessages)) {
       configuration_.printDebugMessages = printDebugMessages ;
     }
 

@@ -219,6 +219,7 @@ namespace elmo{
 
   bool Elmo::loadConfiguration(const Configuration& configuration){
     bool success = true;
+    name_ = configuration.name;
     reading_.configureReading(configuration);
 
     // Check if changing mode of operation will be allowed

@@ -13,7 +13,7 @@ namespace elmo{
   }
 
   bool Elmo::startup(){
-    return (configureRxPdo(rxPdoTypeEnum_) && configureTxPdo(txPdoTypeEnum_));
+    return true;
   }
 
   void Elmo::shutdown(){
@@ -43,7 +43,7 @@ namespace elmo{
       engagePdoStateMachine();
     }
 
-    switch (currentRxPdoTypeEnum_) {
+    switch (configuration_.rxPdoTypeEnum) {
       case RxPdoTypeEnum::RxPdoStandard: {
         RxPdoStandard rxPdo{};
         rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw();
@@ -78,7 +78,7 @@ namespace elmo{
     std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     // TODO(duboisf): implement some sort of time stamp
-    switch (currentTxPdoTypeEnum_) {
+    switch (configuration_.txPdoTypeEnum) {
       case TxPdoTypeEnum::TxPdoStandard: {
         TxPdoStandard txPdo{};
         // reading from the bus
@@ -580,12 +580,12 @@ namespace elmo{
         break;
 
       case RxPdoTypeEnum::NA:
-        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map RxPdo, PdoType not configured properly");
+        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map RxPdoTypeEnum::NA, PdoType not configured properly");
         addErrorToReading(ErrorType::PdoMappingError);
         rxSuccess = false;
         break;
       default:  // Non-implemented type
-        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map RxPdo, PdoType not configured properly");
+        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map unimplemented RxPdo, PdoType not configured properly");
         addErrorToReading(ErrorType::PdoMappingError);
         rxSuccess = false;
         break;
@@ -620,71 +620,18 @@ namespace elmo{
         break;
 
       case TxPdoTypeEnum::NA:
-        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map TxPdo, PdoType not configured properly");
+        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map TxPdoTypeEnum::NA, PdoType not configured properly");
         addErrorToReading(ErrorType::TxPdoMappingError);
         txSuccess = false;
         break;
       default:  // if any case was forgotten
-        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map TxPdo, PdoType not configured properly");
+        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map undefined TxPdo, PdoType not configured properly");
         addErrorToReading(ErrorType::TxPdoMappingError);
         txSuccess = false;
         break;
     }
-
-    if (rxSuccess) {
-      rxSuccess &= configureRxPdo(rxPdoTypeEnum);
-    }
-    if (txSuccess) {
-      txSuccess &= configureTxPdo(txPdoTypeEnum);
-    }
-
     return (txSuccess && rxSuccess);
   }
-
-  bool Elmo::configureRxPdo(const RxPdoTypeEnum rxPdoTypeEnum){
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-    // invalid Type
-    if (rxPdoTypeEnum == RxPdoTypeEnum::NA) {
-      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::configureRxPdo] Invalid Rx PDO Type.");
-      addErrorToReading(ErrorType::RxPdoTypeError);
-      return false;
-    }
-
-    // the types already coincide
-    if (rxPdoTypeEnum == getCurrentRxPdoTypeEnum()) {
-      return true;
-    }
-
-    // set the current Pdo type
-    else {
-      currentRxPdoTypeEnum_ = rxPdoTypeEnum;
-      return true;
-    }
-  }
-
-  bool Elmo::configureTxPdo(const TxPdoTypeEnum txPdoTypeEnum){
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-    // invalid Type
-    if (txPdoTypeEnum == TxPdoTypeEnum::NA) {
-      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::configureTxPdo] Invalid Tx PDO Type.");
-      addErrorToReading(ErrorType::RxPdoTypeError);
-      return false;
-    }
-
-    // the types already coincide
-    if (txPdoTypeEnum == getCurrentTxPdoTypeEnum()) {
-      return true;
-    }
-
-    // set the current Pdo type
-    else {
-      currentTxPdoTypeEnum_ = txPdoTypeEnum;
-      return true;
-    }
-  }
-
   Controlword Elmo::getNextStateTransitionControlword(const DriveState& requestedDriveState,
                                                       const DriveState& currentDriveState){
     Controlword controlword;
@@ -882,7 +829,7 @@ namespace elmo{
     // read value
     const DriveState currentDriveState = reading_.getDriveState();
 
-    // check if the state change already vas successful:
+    // check if the state change already was successful:
     if (currentDriveState == targetDriveState_) {
       numberOfSuccessfulTargetStateReadings_++;
       if (numberOfSuccessfulTargetStateReadings_ >= configuration_.minNumberOfSuccessfulTargetStateReadings) {

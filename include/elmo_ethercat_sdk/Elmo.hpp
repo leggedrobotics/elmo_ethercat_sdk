@@ -54,13 +54,10 @@ namespace elmo {
     public:
       bool setDriveStateViaPdo(const DriveState& driveState, const bool waitForState);
       bool lastPdoStateChangeSuccessful() const { return stateChangeSuccessful_; }
-      RxPdoTypeEnum getCurrentRxPdoTypeEnum() const { return currentRxPdoTypeEnum_; }
-      TxPdoTypeEnum getCurrentTxPdoTypeEnum() const { return currentTxPdoTypeEnum_; }
+
     protected:
       void engagePdoStateMachine();
       bool mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum);
-      bool configureRxPdo(const RxPdoTypeEnum rxPdoTyeEnum);
-      bool configureTxPdo(const TxPdoTypeEnum txPdoTypeEnum);
       Controlword getNextStateTransitionControlword(const DriveState& requestedDriveState,
                                                     const DriveState& currentDriveState);
       void autoConfigurePdoSizes();
@@ -80,10 +77,6 @@ namespace elmo {
       std::string name_;
       Configuration configuration_;
       Controlword controlword_;
-      std::atomic<RxPdoTypeEnum> currentRxPdoTypeEnum_;
-      std::atomic<TxPdoTypeEnum> currentTxPdoTypeEnum_;
-      std::atomic<RxPdoTypeEnum> rxPdoTypeEnum_;
-      std::atomic<TxPdoTypeEnum> txPdoTypeEnum_;
       PdoInfo pdoInfo_;
       bool hasRead_{false};
       bool conductStateChange_{false};

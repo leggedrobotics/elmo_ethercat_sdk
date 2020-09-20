@@ -72,6 +72,7 @@ add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/Command.cpp
   src/${PROJECT_NAME}/Controlword.cpp
   src/${PROJECT_NAME}/Statusword.cpp
+  src/${PROJECT_NAME}/DriveState.cpp
 )
 add_dependencies(
   ${PROJECT_NAME}

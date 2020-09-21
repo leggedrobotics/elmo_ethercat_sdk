@@ -193,8 +193,12 @@ namespace elmo{
 
     if(allowModeChange_){
       modeOfOperation_ = command.getModeOfOperation();
+    }else{
+      if(modeOfOperation_ != command.getModeOfOperation()){
+        MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::stageCommand] Changing the mode of operation of '"
+                          << name_ << "' is not allowed for the active configuration.");
+      }
     }
-
   }
 
   Reading Elmo::getReading() const{

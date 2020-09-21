@@ -41,7 +41,8 @@ bool getValueFromFile(YAML::Node& yamlNode, const std::string& varName, T& var) 
     var = tmpVar;
     return true;
   } catch (...) {
-    MELO_ERROR_STREAM("Error while parsing value \"" << varName << "\", default values will be used");
+    MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getValueFromFile] Error while parsing value \""
+                      << varName << "\", default values will be used");
     return false;
   }
 }
@@ -69,11 +70,12 @@ bool getRxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, RxPdoTyp
       rxPdo = RxPdoTypeEnum::RxPdoCST;
       return true;
     } else {
-      MELO_ERROR_STREAM("Unsupported Rx PDO Type");
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getRxPdoFromFile] Unsupported Rx PDO Type");
       return false;
     }
   } catch (...) {
-    MELO_ERROR_STREAM("Error while parsing value \"" << varName << "\", default values will be used");
+    MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getRxPdoFromFile] Error while parsing value \""
+                      << varName << "\", default values will be used");
     return false;
   }
 }
@@ -102,12 +104,13 @@ bool getTxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, TxPdoTyp
       txPdo = TxPdoTypeEnum::TxPdoStandard;
       return true;
     } else {
-      MELO_ERROR_STREAM("Unsupported Tx PDO Type");
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getTxPdoFromFile] Unsupported Tx PDO Type");
       return false;
     }
 
   } catch (...) {
-    MELO_ERROR_STREAM("Error while parsing value \"" << varName << "\", default values will be used");
+    MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getTxPdoFromFile] Error while parsing value \""
+                      << varName << "\", default values will be used");
     return false;
   }
 }
@@ -148,11 +151,12 @@ bool getModeFromFile(YAML::Node& yamlNode, const std::string& varName, ModeOfOpe
       mode = ModeOfOperationEnum::CyclicSynchronousTorqueMode;
       return true;
     } else {
-      MELO_ERROR_STREAM("Unsupported Mode Of Operation");
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getModeFromFile] Unsupported Mode Of Operation");
       return false;
     }
   } catch (...) {
-    MELO_ERROR_STREAM("Error while parsing value \"" << varName << "\", default values will be used");
+    MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getModeFromFile] Error while parsing value \""
+                      << varName << "\", default values will be used");
     return false;
   }
 }
@@ -162,7 +166,8 @@ ConfigurationParser::ConfigurationParser(const std::string& filename) {
   try{
     configNode = YAML::LoadFile(filename);
   }catch(...){
-    MELO_FATAL_STREAM("Loading YAML configuration file '" << filename << "' failed.");
+    MELO_FATAL_STREAM("[elmo_ethercat_sdk:ConfigurationParser::ConfigurationParser] Loading YAML configuration file '"
+                      << filename << "' failed.");
   }
   parseConfiguration(configNode);
 }

@@ -13,7 +13,26 @@ namespace elmo{
   }
 
   bool Elmo::startup(){
-    return true;
+    bool success = true;
+    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
+    std::cout << "second startup" << std::endl;
+    bus_->setState(EC_STATE_INIT, address_);
+    success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
+    usleep(10000);
+    bus_->setState(EC_STATE_PRE_OP, address_);
+    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
+    usleep(10000);
+    bus_->setState(EC_STATE_SAFE_OP, address_);
+    success &= bus_->waitForState(EC_STATE_SAFE_OP, address_, 50, 0.05);
+    usleep(10000);
+    bus_->setState(EC_STATE_OPERATIONAL, address_);
+    success &= bus_->waitForState(EC_STATE_OPERATIONAL, address_, 50, 0.05);
+    if(!success){
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::startup] '"
+                        << name_
+                        << "': Changing EtherCAT state to operational not successful");
+    }
+    return success;
   }
 
   void Elmo::shutdown(){
@@ -127,7 +146,14 @@ namespace elmo{
   }
 
   bool Elmo::runPreopConfiguration(){
+    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
+    std::cout << "Hello" << std::endl;
     bool success = true;
+    bus_->setState(EC_STATE_INIT, address_);
+    success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
+    usleep(10000);
+    bus_->setState(EC_STATE_PRE_OP, address_);
+    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
     // motor rated current not specified, load hardware value over EtherCAT (SDO)
     if(configuration_.motorRatedCurrentA == 0.0){
       uint32_t motorRatedCurrent;

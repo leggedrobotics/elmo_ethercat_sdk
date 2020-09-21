@@ -90,13 +90,6 @@ namespace elmo {
     protected:
       bool allowModeChange_{false};
       ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
-      // unsigned int sdoVerifyTimeout_{20000}; //microseconds
-      // bool printDebugMessages_{true};
-      // unsigned int driveStateChangeMinTimeout_{20000};
-      // unsigned int driveStateChangeMaxTimeout_{300000};
-      // unsigned int minNumberOfSuccessfulTargetStateReadings_{10};
-      // ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
-      // bool allowModeChange_{false};
 
     protected:
       mutable std::recursive_mutex stagedCommandMutex_; //TODO required?

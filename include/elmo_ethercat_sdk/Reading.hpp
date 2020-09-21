@@ -220,4 +220,4 @@ class Reading{
 }  // namespace elmo
 
 // stream operator in global namespace
-std::ostream& operator<<(std::ostream& os, elmo::Reading& reading);
+std::ostream& operator<<(std::ostream& os, const elmo::Reading& reading);

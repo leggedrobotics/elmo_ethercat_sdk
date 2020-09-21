@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 
 namespace elmo {
 
@@ -31,3 +32,6 @@ enum class RxPdoTypeEnum : int8_t { NA = 0, RxPdoStandard, RxPdoCST };
 enum class TxPdoTypeEnum : int8_t { NA = -128, TxPdoStandard, TxPdoCST };
 
 }  // namespace elmo
+
+std::ostream& operator<<(std::ostream& os, const elmo::TxPdoTypeEnum& txPdoTypeEnum);
+std::ostream& operator<<(std::ostream& os, const elmo::RxPdoTypeEnum& rxPdoTypeEnum);

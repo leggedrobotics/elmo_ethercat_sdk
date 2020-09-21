@@ -23,7 +23,7 @@
 
 #include "elmo_ethercat_sdk/Reading.hpp"
 
-std::ostream& operator<<(std::ostream& os, elmo::Reading& reading) {
+std::ostream& operator<<(std::ostream& os, const elmo::Reading& reading) {
   // TODO(duboisf) make table, remove statusword
   os << std::left << std::setw(30) << "Actual Position:" << reading.getActualPosition() << "\n"
      << std::setw(30) << "Actual Velocity:" << reading.getActualVelocity() << "\n"

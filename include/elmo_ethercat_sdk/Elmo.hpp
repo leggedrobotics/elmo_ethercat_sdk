@@ -28,9 +28,7 @@ namespace elmo {
 
     // virtual overwrites
     public:
-      bool preopConfigurationRequired() override {return true;}
       bool clockSyncRequired() override {return true;}
-      bool runPreopConfiguration() override;
 
     public:
       void stageCommand(const Command& command);

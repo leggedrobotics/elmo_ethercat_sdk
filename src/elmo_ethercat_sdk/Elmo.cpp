@@ -13,25 +13,65 @@ namespace elmo{
   }
 
   bool Elmo::startup(){
+    std::cout << "Elmo::startup()" << std::endl;
     bool success = true;
-    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
-    std::cout << "second startup" << std::endl;
-    bus_->setState(EC_STATE_INIT, address_);
-    success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
-    usleep(10000);
-    bus_->setState(EC_STATE_PRE_OP, address_);
-    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
-    usleep(10000);
-    bus_->setState(EC_STATE_SAFE_OP, address_);
-    success &= bus_->waitForState(EC_STATE_SAFE_OP, address_, 50, 0.05);
-    usleep(10000);
-    bus_->setState(EC_STATE_OPERATIONAL, address_);
-    success &= bus_->waitForState(EC_STATE_OPERATIONAL, address_, 50, 0.05);
-    if(!success){
-      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::startup] '"
-                        << name_
-                        << "': Changing EtherCAT state to operational not successful");
+    // bus_->setState(EC_STATE_INIT, address_);
+    // success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
+    // std::cout << std::boolalpha << success << std::noboolalpha << std::endl;
+    // usleep(10000);
+    // bus_->setState(EC_STATE_PRE_OP, address_);
+    // success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
+    
+    // motor rated current not specified, load hardware value over EtherCAT (SDO)
+    std::cout << "preop: " << bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05) << std::endl;;
+    if(configuration_.motorRatedCurrentA == 0.0){
+      uint32_t motorRatedCurrent;
+      success &= sendSdoRead(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
+      configuration_.motorRatedCurrentA = static_cast<double>(motorRatedCurrent)/1000.0 ;
+      reading_.configureReading(configuration_);
     }
+    success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
+    // PDO mapping
+    success &= mapPdos(configuration_.rxPdoTypeEnum, configuration_.txPdoTypeEnum);
+    // Set initial mode of operation
+    success &= sdoVerifyWrite(OD_INDEX_MODES_OF_OPERATION,
+                              0,
+                              false, static_cast<int8_t>(configuration_.modeOfOperationEnum),
+                              configuration_.configRunSdoVerifyTimeout);
+    // To be on the safe side: set currect PDO sizes
+    autoConfigurePdoSizes();
+    uint32_t motorRatedCurrent = static_cast<uint32_t>(
+      round(1000.0 * configuration_.motorRatedCurrentA));
+    success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
+    success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_TORQUE, 0, false, motorRatedCurrent);
+
+    // Write maximum current to drive
+    uint16_t maxCurrent = static_cast<uint16_t>(floor(1000.0 * configuration_.maxCurrentA));
+    success &= sdoVerifyWrite(OD_INDEX_MAX_CURRENT, 0, false, maxCurrent);
+
+    // success &= setDriveStateViaSdo(DriveState::OperationEnabled);
+    // int16_t extrapolationTimeoutCycles = 2;
+    // sendSdoWrite(0x2f75, 0, false, extrapolationTimeoutCycles);
+    // sendSdoRead(0x2f75, 0, false, extrapolationTimeoutCycles);
+    // std::cout << "extrapolation timeout cycles: " << (int)extrapolationTimeoutCycles << std::endl;
+
+    if(!success){
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::runPreopConfiguration] hardware configuration of '"
+                        << name_ <<"' not successful!");
+      addErrorToReading(ErrorType::ConfigurationError);
+    }
+
+
+    // extrapolation timeout cycles 0x2f75
+    int16_t extrapolationTimeoutCycles = 10;
+    bool extrapolationTimeoutCyclesSuccess = sdoVerifyWrite(0x2f75, 0, false, extrapolationTimeoutCycles);
+    std::cout << "\033[33mextrapolation timeout cycles writing sdo success: " << extrapolationTimeoutCyclesSuccess << "\033[m]" << std::endl;
+
+    // enable free run
+    uint16_t freerun = 0;
+    bool freerunSuccess = sdoVerifyWrite(0x1c32, 1, false, freerun);
+    std::cout << "\033[32mFreerun SDO writing success: " << freerunSuccess << "\033[m" << std::endl;
+    std::cout << "Elmo::startup(): success = " << success << std::endl;
     return success;
   }
 
@@ -62,6 +102,7 @@ namespace elmo{
       engagePdoStateMachine();
     }
 
+    //std::cout << "update write: controlword:\n" << controlword_ << std::endl;
     switch (configuration_.rxPdoTypeEnum) {
       case RxPdoTypeEnum::RxPdoStandard: {
         RxPdoStandard rxPdo{};
@@ -143,57 +184,6 @@ namespace elmo{
         reading_.addError(ErrorType::ErrorReadingError);
       }
     }
-  }
-
-  bool Elmo::runPreopConfiguration(){
-    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
-    std::cout << "Hello" << std::endl;
-    bool success = true;
-    bus_->setState(EC_STATE_INIT, address_);
-    success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
-    usleep(10000);
-    bus_->setState(EC_STATE_PRE_OP, address_);
-    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
-    // motor rated current not specified, load hardware value over EtherCAT (SDO)
-    if(configuration_.motorRatedCurrentA == 0.0){
-      uint32_t motorRatedCurrent;
-      success &= sendSdoRead(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
-      configuration_.motorRatedCurrentA = static_cast<double>(motorRatedCurrent)/1000.0 ;
-      reading_.configureReading(configuration_);
-    }
-
-    success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
-    // PDO mapping
-    success &= mapPdos(configuration_.rxPdoTypeEnum, configuration_.txPdoTypeEnum);
-    // Set initial mode of operation
-    success &= sdoVerifyWrite(OD_INDEX_MODES_OF_OPERATION,
-                              0,
-                              false, static_cast<int8_t>(configuration_.modeOfOperationEnum),
-                              configuration_.configRunSdoVerifyTimeout);
-    // To be on the safe side: set currect PDO sizes
-    autoConfigurePdoSizes();
-
-    /*
-    ** Write requested motor rated current to the drives.
-    ** The motor rated torque is set to the same value since we handle
-    ** the current / torque conversion in this library and not on
-    ** the hardware.
-    */
-    uint32_t motorRatedCurrent = static_cast<uint32_t>(
-      round(1000.0 * configuration_.motorRatedCurrentA));
-    success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
-    success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_TORQUE, 0, false, motorRatedCurrent);
-
-    // Write maximum current to drive
-    uint16_t maxCurrent = static_cast<uint16_t>(floor(1000.0 * configuration_.maxCurrentA));
-    success &= sdoVerifyWrite(OD_INDEX_MAX_CURRENT, 0, false, maxCurrent);
-
-    if(!success){
-      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::runPreopConfiguration] hardware configuration of '"
-                        << name_ <<"' not successful!");
-      addErrorToReading(ErrorType::ConfigurationError);
-    }
-    return success;
   }
 
   void Elmo::stageCommand(const Command& command){

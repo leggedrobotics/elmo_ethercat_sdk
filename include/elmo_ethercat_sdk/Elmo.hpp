@@ -5,7 +5,7 @@
 #include "elmo_ethercat_sdk/Reading.hpp"
 #include "elmo_ethercat_sdk/Controlword.hpp"
 
-#include <ethercat_sdk_master/EthercatDrive.hpp>
+#include <ethercat_sdk_master/EthercatDevice.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -16,7 +16,7 @@
 #include <chrono>
 
 namespace elmo {
-  class Elmo : public ecat_master::EthercatDrive{
+  class Elmo : public ecat_master::EthercatDevice{
     // pure virtual overwrites
     public:
       std::string getName() const override;

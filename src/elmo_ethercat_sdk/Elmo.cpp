@@ -565,7 +565,7 @@ namespace elmo{
       }
       // unlock the mutex during sleep time
       mutex_.unlock();
-      usleep(1000);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       // lock the mutex to be able to check the success flag
       mutex_.lock();
     }
@@ -578,25 +578,25 @@ namespace elmo{
     bool rxSuccess = true;
     switch (rxPdoTypeEnum) {
       case RxPdoTypeEnum::RxPdoStandard:
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(0), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 1, false, static_cast<uint16_t>(0x1605), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 2, false, static_cast<uint16_t>(0x1618), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(2), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         break;
       case RxPdoTypeEnum::RxPdoCST:
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(0), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 1, false, static_cast<uint16_t>(0x1602), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 2, false, static_cast<uint16_t>(0x160b), configuration_.configRunSdoVerifyTimeout);
         rxSuccess &= sdoVerifyWrite(OD_INDEX_RX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(2), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         break;
 
       case RxPdoTypeEnum::NA:
@@ -615,28 +615,28 @@ namespace elmo{
     switch (txPdoTypeEnum) {
       case TxPdoTypeEnum::TxPdoStandard:
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(0), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 1, false, static_cast<uint16_t>(0x1a03), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 2, false, static_cast<uint16_t>(0x1a1d), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 3, false, static_cast<uint16_t>(0x1a1f), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 4, false, static_cast<uint16_t>(0x1a18), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(4), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         break;
 
       case TxPdoTypeEnum::TxPdoCST:
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(0), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 1, false, static_cast<uint16_t>(0x1a02), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 2, false, static_cast<uint16_t>(0x1a11), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(2), configuration_.configRunSdoVerifyTimeout);
-        usleep(configuration_.configRunSdoVerifyTimeout);
+        std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
         break;
 
       case TxPdoTypeEnum::NA:

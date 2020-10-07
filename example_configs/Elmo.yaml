@@ -1,0 +1,25 @@
+# Example config file for Elmo Drives
+Elmo:
+  config_run_sdo_verify_timeout:                  50000
+  print_debug_messages:                           true
+  use_raw_commands:                               false
+  drive_state_change_min_timeout:                 1000
+  drive_state_change_max_timeout:                 1000000
+  min_number_of_successful_target_state_readings: 50
+
+Reading:
+  force_append_equal_error:                       true
+  force_append_equal_fault:                       false
+  error_storage_capacity:                         100
+  fault_storage_capacity:                         100
+
+Hardware:
+  rx_pdo_type:                                    "RxPdoStandard"
+  tx_pdo_type:                                    "TxPdoStandard"
+  mode_of_operation:                              "CyclicSynchronousTorqueMode"
+  use_multiple_modes_of_operation:                true
+  position_encoder_resolution:                    66
+  gear_ratio:                                     [1,1]
+  motor_constant:                                 1.0
+  max_current:                                    5.0
+  motor_rated_current:                            1.0

@@ -31,4 +31,5 @@ std::ostream& operator<<(std::ostream& os, const elmo::DriveState& driveState){
       break;
 
   }
+  return os;
 }

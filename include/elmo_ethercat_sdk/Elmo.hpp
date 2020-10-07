@@ -17,9 +17,15 @@
 
 namespace elmo {
   class Elmo : public ecat_master::EthercatDevice{
+    public:
+      typedef std::shared_ptr<Elmo> SharedPtr;
+
+    // constructor
+    Elmo() = default;
+    Elmo(const std::string& name, const uint32_t address);
+
     // pure virtual overwrites
     public:
-      std::string getName() const override;
       bool startup() override;
       void shutdown() override;
       void updateWrite() override;
@@ -28,7 +34,8 @@ namespace elmo {
 
     // virtual overwrites
     public:
-      bool clockSyncRequired() override {return true;}
+      bool preStartupOnlineConfigRequired() override {return true;}
+      bool preStartupOnlineConfiguration() override;
 
     public:
       void stageCommand(const Command& command);
@@ -72,7 +79,6 @@ namespace elmo {
     protected:
       Command stagedCommand_;
       Reading reading_;
-      std::string name_;
       Configuration configuration_;
       Controlword controlword_;
       PdoInfo pdoInfo_;

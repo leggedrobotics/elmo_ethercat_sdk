@@ -5,29 +5,59 @@
 #include "elmo_ethercat_sdk/TxPdo.hpp"
 
 #include <cmath>
+#include <thread>
+#include <chrono>
 
 namespace elmo{
+  std::string binstring(uint16_t var){
+    std::string s = "0000000000000000";
+    for(int i = 0; i < 16; i++){
+      if(var & (1 << (15-i))){
+        s[i] = '1';
+      }
+    }
+    return s;
+  }
+  std::string binstring(int8_t var){
+    std::string s = "00000000";
+    for(int i = 0; i < 8; i++){
+      if(var & (1 << (7-i))){
+        s[i] = '1';
+      }
+    }
+    return s;
+  }
 
-  std::string Elmo::getName() const{
-    return name_;
+  Elmo::Elmo(const std::string& name, const uint32_t address){
+    address_ = address;
+    name_ = name;
   }
 
   bool Elmo::startup(){
-    std::cout << "Elmo::startup()" << std::endl;
+    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return true;
+  }
+
+  bool Elmo::preStartupOnlineConfiguration(){
     bool success = true;
-    // bus_->setState(EC_STATE_INIT, address_);
-    // success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
-    // std::cout << std::boolalpha << success << std::noboolalpha << std::endl;
-    // usleep(10000);
-    // bus_->setState(EC_STATE_PRE_OP, address_);
-    // success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
-    
-    // motor rated current not specified, load hardware value over EtherCAT (SDO)
-    std::cout << "preop: " << bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05) << std::endl;;
+
+    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // These are the ugly Elmo hacks which make the configuration run possible
+    bus_->setState(EC_STATE_INIT, address_);
+    success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    bus_->setState(EC_STATE_PRE_OP, address_);
+    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
+
+    // use hardware motor rated current value if necessary
     if(configuration_.motorRatedCurrentA == 0.0){
       uint32_t motorRatedCurrent;
       success &= sendSdoRead(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
+      // update the configuration to accomodate the new motor rated current value
       configuration_.motorRatedCurrentA = static_cast<double>(motorRatedCurrent)/1000.0 ;
+      // update the reading_ object to ensure correct unit conversion
       reading_.configureReading(configuration_);
     }
     success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
@@ -40,6 +70,8 @@ namespace elmo{
                               configuration_.configRunSdoVerifyTimeout);
     // To be on the safe side: set currect PDO sizes
     autoConfigurePdoSizes();
+
+    // write the motor rated current / torque to the drives
     uint32_t motorRatedCurrent = static_cast<uint32_t>(
       round(1000.0 * configuration_.motorRatedCurrentA));
     success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
@@ -49,29 +81,11 @@ namespace elmo{
     uint16_t maxCurrent = static_cast<uint16_t>(floor(1000.0 * configuration_.maxCurrentA));
     success &= sdoVerifyWrite(OD_INDEX_MAX_CURRENT, 0, false, maxCurrent);
 
-    // success &= setDriveStateViaSdo(DriveState::OperationEnabled);
-    // int16_t extrapolationTimeoutCycles = 2;
-    // sendSdoWrite(0x2f75, 0, false, extrapolationTimeoutCycles);
-    // sendSdoRead(0x2f75, 0, false, extrapolationTimeoutCycles);
-    // std::cout << "extrapolation timeout cycles: " << (int)extrapolationTimeoutCycles << std::endl;
-
     if(!success){
-      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::runPreopConfiguration] hardware configuration of '"
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::preStartupOnlineConfiguration] hardware configuration of '"
                         << name_ <<"' not successful!");
       addErrorToReading(ErrorType::ConfigurationError);
     }
-
-
-    // extrapolation timeout cycles 0x2f75
-    int16_t extrapolationTimeoutCycles = 10;
-    bool extrapolationTimeoutCyclesSuccess = sdoVerifyWrite(0x2f75, 0, false, extrapolationTimeoutCycles);
-    std::cout << "\033[33mextrapolation timeout cycles writing sdo success: " << extrapolationTimeoutCyclesSuccess << "\033[m]" << std::endl;
-
-    // enable free run
-    uint16_t freerun = 0;
-    bool freerunSuccess = sdoVerifyWrite(0x1c32, 1, false, freerun);
-    std::cout << "\033[32mFreerun SDO writing success: " << freerunSuccess << "\033[m" << std::endl;
-    std::cout << "Elmo::startup(): success = " << success << std::endl;
     return success;
   }
 
@@ -102,7 +116,6 @@ namespace elmo{
       engagePdoStateMachine();
     }
 
-    //std::cout << "update write: controlword:\n" << controlword_ << std::endl;
     switch (configuration_.rxPdoTypeEnum) {
       case RxPdoTypeEnum::RxPdoStandard: {
         RxPdoStandard rxPdo{};
@@ -132,6 +145,7 @@ namespace elmo{
                         << name_ << "'");
         addErrorToReading(ErrorType::RxPdoTypeError);
     }
+
   }
 
   void Elmo::updateRead(){
@@ -177,13 +191,12 @@ namespace elmo{
     * Check whether the state has changed to "FAULT"
     */
     if (reading_.getDriveState() == DriveState::Fault) {
-      uint16_t fault;
-      if (sendSdoReadUInt16(OD_INDEX_ERROR_CODE, 0, false, fault)) {  // TODO(duboisf) check
-        reading_.addFault(fault);
-      } else {
-        reading_.addError(ErrorType::ErrorReadingError);
-      }
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateRead] '"
+                        << name_ << "' is in drive state 'Fault'");
     }
+
+
+
   }
 
   void Elmo::stageCommand(const Command& command){
@@ -210,7 +223,7 @@ namespace elmo{
     if(allowModeChange_){
       modeOfOperation_ = command.getModeOfOperation();
     }else{
-      if(modeOfOperation_ != command.getModeOfOperation()){
+      if(modeOfOperation_ != command.getModeOfOperation() && command.getModeOfOperation() != ModeOfOperationEnum::NA){
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::stageCommand] Changing the mode of operation of '"
                           << name_ << "' is not allowed for the active configuration.");
       }
@@ -239,7 +252,6 @@ namespace elmo{
 
   bool Elmo::loadConfiguration(const Configuration& configuration){
     bool success = true;
-    name_ = configuration.name;
     reading_.configureReading(configuration);
 
     // Check if changing mode of operation will be allowed

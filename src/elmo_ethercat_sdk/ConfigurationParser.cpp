@@ -181,38 +181,34 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
     /// A new node for the ElmoEthercat class
     YAML::Node elmoNode = configNode["Elmo"];
 
-    std::string name;
-    if (getValueFromFile(elmoNode, "NAME", name)){
-      configuration_.name = name;
-    }
     unsigned int configRunSdoVerifyTimeout;
-    if (getValueFromFile(elmoNode, "CONFIG_RUN_SDO_VERIFY_TIMEOUT", configRunSdoVerifyTimeout)) {
+    if (getValueFromFile(elmoNode, "config_run_sdo_verify_timeout", configRunSdoVerifyTimeout)) {
       configuration_.configRunSdoVerifyTimeout = configRunSdoVerifyTimeout;
     }
 
     bool printDebugMessages;
-    if (getValueFromFile(elmoNode, "PRINT_DEBUG_MESSAGES", printDebugMessages)) {
+    if (getValueFromFile(elmoNode, "print_debug_messages", printDebugMessages)) {
       configuration_.printDebugMessages = printDebugMessages ;
     }
 
     bool useRawCommands;
-    if (getValueFromFile(elmoNode, "USE_RAW_COMMANDS", useRawCommands)) {
+    if (getValueFromFile(elmoNode, "use_raw_commands", useRawCommands)) {
       configuration_.useRawCommands = useRawCommands ;
     }
 
     unsigned int driveStateChangeMinTimeout;
-    if (getValueFromFile(elmoNode, "DRIVE_STATE_CHANGE_MIN_TIMEOUT", driveStateChangeMinTimeout)) {
+    if (getValueFromFile(elmoNode, "drive_state_change_min_timeout", driveStateChangeMinTimeout)) {
       configuration_.driveStateChangeMinTimeout = driveStateChangeMinTimeout ;
     }
 
     unsigned int minNumberOfSuccessfulTargetStateReadings;
-    if (getValueFromFile(elmoNode, "MIN_NUMBER_OF_SUCCESSFUL_TARGET_STATE_READINGS",
+    if (getValueFromFile(elmoNode, "min_number_of_successful_target_state_readings",
                          minNumberOfSuccessfulTargetStateReadings)) {
       configuration_.minNumberOfSuccessfulTargetStateReadings = minNumberOfSuccessfulTargetStateReadings ;
     }
 
     unsigned int driveStateChangeMaxTimeout;
-    if (getValueFromFile(elmoNode, "DRIVE_STATE_CHANGE_MAX_TIMEOUT", driveStateChangeMaxTimeout)) {
+    if (getValueFromFile(elmoNode, "drive_state_change_max_timeout", driveStateChangeMaxTimeout)) {
       configuration_.driveStateChangeMaxTimeout = driveStateChangeMaxTimeout ;
     }
   }
@@ -222,22 +218,22 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
     YAML::Node readingNode = configNode["Reading"];
 
     bool forceAppendEqualError;
-    if (getValueFromFile(readingNode, "FORCE_APPEND_EQUAL_ERROR", forceAppendEqualError)) {
+    if (getValueFromFile(readingNode, "force_append_equal_error", forceAppendEqualError)) {
       configuration_.forceAppendEqualError = forceAppendEqualError ;
     }
 
     bool forceAppendEqualFault;
-    if (getValueFromFile(readingNode, "FORCE_APPEND_EQUAL_FAULT", forceAppendEqualFault)) {
+    if (getValueFromFile(readingNode, "force_append_equal_fault", forceAppendEqualFault)) {
       configuration_.forceAppendEqualFault = forceAppendEqualFault ;
     }
 
     unsigned int errorStorageCapacity;
-    if (getValueFromFile(readingNode, "ERROR_STORAGE_CAPACITY", errorStorageCapacity)) {
+    if (getValueFromFile(readingNode, "error_storage_capacity", errorStorageCapacity)) {
       configuration_.errorStorageCapacity = errorStorageCapacity ;
     }
 
     unsigned int faultStorageCapacity;
-    if (getValueFromFile(readingNode, "FAULT_STORAGE_CAPACITY", faultStorageCapacity)) {
+    if (getValueFromFile(readingNode, "fault_storage_capacity", faultStorageCapacity)) {
       configuration_.faultStorageCapacity = faultStorageCapacity ;
     }
   }
@@ -247,47 +243,47 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
     YAML::Node hardwareNode = configNode["Hardware"];
 
     RxPdoTypeEnum rxPdo;
-    if (getRxPdoFromFile(hardwareNode, "RX_PDO_TYPE", rxPdo)) {
+    if (getRxPdoFromFile(hardwareNode, "rx_pdo_type", rxPdo)) {
       configuration_.rxPdoTypeEnum = rxPdo ;
     }
 
     TxPdoTypeEnum txPdo;
-    if (getTxPdoFromFile(hardwareNode, "TX_PDO_TYPE", txPdo)) {
+    if (getTxPdoFromFile(hardwareNode, "tx_pdo_type", txPdo)) {
       configuration_.txPdoTypeEnum = txPdo ;
     }
 
     ModeOfOperationEnum modeOfOperation_;
-    if (getModeFromFile(hardwareNode, "MODE_OF_OPERATION", modeOfOperation_)) {
+    if (getModeFromFile(hardwareNode, "mode_of_operation", modeOfOperation_)) {
       configuration_.modeOfOperationEnum = modeOfOperation_ ;
     }
 
     int32_t positionEncoderResolution;
-    if (getValueFromFile(hardwareNode, "POSITION_ENCODER_RESOLUTION", positionEncoderResolution)) {
+    if (getValueFromFile(hardwareNode, "position_encoder_resolution", positionEncoderResolution)) {
       configuration_.positionEncoderResolution = positionEncoderResolution ;
     }
 
     std::pair<float, float> gearRatio;
-    if (getValueFromFile(hardwareNode, "GEAR_RATIO", gearRatio)) {
+    if (getValueFromFile(hardwareNode, "gear_ratio", gearRatio)) {
       configuration_.gearRatio = static_cast<double>(gearRatio.first) / static_cast<double>(gearRatio.second);
     }
 
     double motorConstant;
-    if (getValueFromFile(hardwareNode, "MOTOR_CONSTANT", motorConstant)) {
+    if (getValueFromFile(hardwareNode, "motor_constant", motorConstant)) {
       configuration_.motorConstant = motorConstant ;
     }
 
     double maxCurrentA;
-    if (getValueFromFile(hardwareNode, "MAX_CURRENT", maxCurrentA)) {
+    if (getValueFromFile(hardwareNode, "max_current", maxCurrentA)) {
       configuration_.maxCurrentA = maxCurrentA ;
     }
 
     double motorRatedCurrentA;
-    if (getValueFromFile(hardwareNode, "MOTOR_RATED_CURRENT", motorRatedCurrentA)) {
+    if (getValueFromFile(hardwareNode, "motor_rated_current", motorRatedCurrentA)) {
       configuration_.motorRatedCurrentA = motorRatedCurrentA ;
     }
 
     bool useMultipleModeOfOperations;
-    if (getValueFromFile(hardwareNode, "USE_MULTIPLE_MODE_OF_OPERATIONS", useMultipleModeOfOperations)) {
+    if (getValueFromFile(hardwareNode, "use_multiple_modes_of_operation", useMultipleModeOfOperations)) {
       configuration_.useMultipleModeOfOperations = useMultipleModeOfOperations ;
     }
   }

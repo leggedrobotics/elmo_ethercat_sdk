@@ -32,11 +32,6 @@ namespace elmo {
       void updateRead() override;
       PdoInfo getCurrentPdoInfo() const override { return pdoInfo_; }
 
-    // virtual overwrites
-    public:
-      bool preStartupOnlineConfigRequired() override {return true;}
-      bool preStartupOnlineConfiguration() override;
-
     public:
       void stageCommand(const Command& command);
       Reading getReading() const;

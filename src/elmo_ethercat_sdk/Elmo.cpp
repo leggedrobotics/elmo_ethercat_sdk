@@ -34,24 +34,13 @@ namespace elmo{
   }
 
   bool Elmo::startup(){
-    bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    return true;
-  }
-
-  bool Elmo::preStartupOnlineConfiguration(){
     bool success = true;
-
+    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
     bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_/2.f);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // These are the ugly Elmo hacks which make the configuration run possible
-    bus_->setState(EC_STATE_INIT, address_);
-    success &= bus_->waitForState(EC_STATE_INIT, address_, 50, 0.05);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    bus_->setState(EC_STATE_PRE_OP, address_);
-    success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
 
     // use hardware motor rated current value if necessary
+    // TODO test
     if(configuration_.motorRatedCurrentA == 0.0){
       uint32_t motorRatedCurrent;
       success &= sendSdoRead(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
@@ -86,6 +75,7 @@ namespace elmo{
                         << name_ <<"' not successful!");
       addErrorToReading(ErrorType::ConfigurationError);
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return success;
   }
 
@@ -94,9 +84,6 @@ namespace elmo{
   }
 
   void Elmo::updateWrite(){
-    /* locking the mutex_
-    ** This is necessary since "updateWrite" is called from an external thread
-    */
     std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     /*
@@ -187,16 +174,11 @@ namespace elmo{
       hasRead_ = true;
     }
 
-    /*!
-    * Check whether the state has changed to "FAULT"
-    */
+    // Print warning if drive is in Fault state.
     if (reading_.getDriveState() == DriveState::Fault) {
       MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateRead] '"
                         << name_ << "' is in drive state 'Fault'");
     }
-
-
-
   }
 
   void Elmo::stageCommand(const Command& command){

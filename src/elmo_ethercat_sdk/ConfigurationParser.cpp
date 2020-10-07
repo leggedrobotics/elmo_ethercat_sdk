@@ -34,6 +34,8 @@ namespace elmo {
 template <typename T>
 bool getValueFromFile(YAML::Node& yamlNode, const std::string& varName, T& var) {
   if (!yamlNode[varName].IsDefined()) {
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
+                     << varName << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -55,6 +57,8 @@ bool getValueFromFile(YAML::Node& yamlNode, const std::string& varName, T& var) 
  */
 bool getRxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, RxPdoTypeEnum& rxPdo) {
   if (!yamlNode[varName].IsDefined()) {
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
+                     << varName << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -89,6 +93,8 @@ bool getRxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, RxPdoTyp
  */
 bool getTxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, TxPdoTypeEnum& txPdo) {
   if (!yamlNode[varName].IsDefined()) {
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
+                     << varName << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -124,6 +130,8 @@ bool getTxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, TxPdoTyp
  */
 bool getModeFromFile(YAML::Node& yamlNode, const std::string& varName, ModeOfOperationEnum& mode) {
   if (!yamlNode[varName].IsDefined()) {
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
+                     << varName << "' is missing. Default value will be used.");
     return false;
   }
   try {

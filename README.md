@@ -22,11 +22,11 @@ A copy of the license is available in the *COPYING* file.
 
 #### Catkin Packages
 
-| Repo           | url                                                  | License      | Content                                          |
-|:--------------:|:----------------------------------------------------:|:------------:|:------------------------------------------------:|
-| soem_interface | https://github.com/leggedrobotics/soem_interface.git | GPLv3        | EtherCAT functionalities                         |
-| any_node       | https://github.com/leggedrobotics/any_node.git       | BSD 3-Clause | multi-threading, signal handling functionalities |
-| message_logger | https://github.com/leggedrobotics/message_logger.git | BSD 3-Clause | simple log streams                               |
+| Repo                | url                                                   | License      | Content                             |
+|:-------------------:|:-----------------------------------------------------:|:------------:|:-----------------------------------:|
+| soem_interface      | https://github.com/leggedrobotics/soem_interface.git  | GPLv3        | Low-level EtherCAT functionalities  |
+| ethercat_sdk_master | https://github.com/leggedrobotics/ethercat_sdk_master | BSD 3-Clause | High-level EtherCAT functionalities |
+| message_logger      | https://github.com/leggedrobotics/message_logger.git  | BSD 3-Clause | simple log streams                  |
 
 #### System Dependencies (Ubuntu 18.04 LTS)
 
@@ -40,7 +40,7 @@ To build the library from source, clone the latest version from this repository 
 
 	cd catkin_workspace/src
 	git clone https://github.com/leggedrobotics/soem_interface.git
-    git clone https://github.com/leggedrobotics/any_node.git
+    git clone https://github.com/leggedrobotics/ethercat_sdk_master.git
     git clone https://github.com/leggedrobotics/message_logger.git
     git clone https://github.com/leggedrobotics/elmo_ethercat_sdk.git
 	cd ../
@@ -50,20 +50,8 @@ To build the examples, execute the following command inside of your catkin works
 	
 	catkin build elmo_examples
 	
-## Examples on how to use the elmo\_ethercat\_sdk
-There is an elmo_examples folder (separate catkin package) with two examples that can be used as a reference.
-A more detailed documentation of the examples is currently being developed.
-
-## Known bug
-The mapping of PDOs currently leads to an unexpected behaviour of the state machine of the Elmo motor controllers.
-A reliable workaround is to restart the connection after mapping new PDO types.
-If you use the *ElmoEthercatMaster* in your project then you do not have to consider this issue since the restarting after the initial configuration is handled automatically.
 
 ## Firmware version
-- This library works with the firmware version 01.01.15.00 (October 2018) for the motor controllers. *Other versions are not supported!*
-
-
-## DISCLAIMER
-Due to the current pandemic, we could not test this version of the elmo_ethercat_sdk on hardware.
-
-Tests will be conducted as soon as possible.
+This library is known to work with the following firmware versions:
+- 01.01.15.00
+- 01.01.16.00

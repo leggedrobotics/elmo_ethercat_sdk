@@ -36,7 +36,6 @@ along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>message_logger</depend>
-  <depend>signal_handler</depend>
   <depend>soem_interface</depend>
   <depend>yaml-cpp</depend>
   <depend>ethercat_sdk_master</depend>

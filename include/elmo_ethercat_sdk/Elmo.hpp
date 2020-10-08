@@ -20,9 +20,11 @@ namespace elmo {
     public:
       typedef std::shared_ptr<Elmo> SharedPtr;
 
-    // constructor
-    Elmo() = default;
-    Elmo(const std::string& name, const uint32_t address);
+      // create Elmo Drive from setup file
+      static SharedPtr deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address);
+      // constructor
+      Elmo() = default;
+      Elmo(const std::string& name, const uint32_t address);
 
     // pure virtual overwrites
     public:

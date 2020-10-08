@@ -28,6 +28,12 @@ namespace elmo{
     return s;
   }
 
+  Elmo::SharedPtr Elmo::deviceFromFile(const std::string &configFile, const std::string& name, const uint32_t address){
+    auto elmo = std::make_shared<Elmo>(name, address);
+    elmo->loadConfigFile(configFile);
+    return elmo;
+  }
+
   Elmo::Elmo(const std::string& name, const uint32_t address){
     address_ = address;
     name_ = name;

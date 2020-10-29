@@ -51,6 +51,7 @@ class Configuration {
   double motorRatedCurrentA{0};
   double maxCurrentA{0};
   bool useMultipleModeOfOperations{false};
+  int direction{1};
 
  public:
   // stream operator

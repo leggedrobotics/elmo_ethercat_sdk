@@ -294,6 +294,10 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
     if (getValueFromFile(hardwareNode, "use_multiple_modes_of_operation", useMultipleModeOfOperations)) {
       configuration_.useMultipleModeOfOperations = useMultipleModeOfOperations ;
     }
+    int direction;
+    if (getValueFromFile(hardwareNode, "direction", direction)) {
+      configuration_.direction = direction;
+    }
   }
 }
 

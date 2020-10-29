@@ -76,6 +76,14 @@ std::ostream& operator<<(std::ostream& os, const Configuration& configuration) {
   std::string rxPdo = rxPdoString(configuration.rxPdoTypeEnum);
   std::string txPdo = txPdoString(configuration.txPdoTypeEnum);
 
+  std::string direction_ = "";
+  if(configuration.direction == 1)
+    direction_ = "+1";
+  else if(configuration.direction == -1)
+    direction_ = "-1";
+  else
+    direction_ = "ERROR";
+
   // The size of the second columne
   unsigned int tmp1 = rxPdo.size();
   unsigned int tmp2 = txPdo.size();
@@ -92,6 +100,8 @@ std::ostream& operator<<(std::ostream& os, const Configuration& configuration) {
      << "|\n"
      << std::setfill(' ') << std::setw(43) << "| Mode of Operation:"
      << "| " << std::setw(len2) << modeOfOperation_ << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Direction:"
+     << "| " << std::setw(len2) << direction_ << "|\n"
      << std::setw(43) << "| Rx PDO Type:"
      << "| " << std::setw(len2) << rxPdo << "|\n"
      << std::setw(43) << "| Tx PDO Type:"

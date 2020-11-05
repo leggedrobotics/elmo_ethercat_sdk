@@ -190,10 +190,22 @@ namespace elmo{
   void Elmo::stageCommand(const Command& command){
     std::lock_guard<std::recursive_mutex> lock(stagedCommandMutex_);
     stagedCommand_ = command;
-    stagedCommand_.setPositionFactorRadToInteger(
-      static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
-    stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(
-      static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+    if(configuration_.encoderPosition == Configuration::EncoderPosition::joint){
+      stagedCommand_.setPositionFactorRadToInteger(
+        static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+      stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(
+        static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+    } else if(configuration_.encoderPosition == Configuration::EncoderPosition::motor){
+      stagedCommand_.setPositionFactorRadToInteger(
+        static_cast<double>(configuration_.positionEncoderResolution) /
+        (2.0 * M_PI) * configuration_.gearRatio);
+      stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(
+        static_cast<double>(configuration_.positionEncoderResolution) /
+        (2.0 * M_PI) * configuration_.gearRatio);
+    } else {
+      stagedCommand_.setPositionFactorRadToInteger(0.0);
+      stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(0.0);
+    }
 
     double currentFactorAToInt = 1000.0 / configuration_.motorRatedCurrentA;
     stagedCommand_.setCurrentFactorAToInteger(currentFactorAToInt);
@@ -239,7 +251,6 @@ namespace elmo{
   }
 
   bool Elmo::loadConfiguration(const Configuration& configuration){
-    bool success = true;
     reading_.configureReading(configuration);
 
     // Check if changing mode of operation will be allowed
@@ -251,7 +262,8 @@ namespace elmo{
     modeOfOperation_ = configuration.modeOfOperationEnum;
 
     configuration_ = configuration;
-    return success;
+    MELO_INFO_STREAM("Configuration Sanity Check of Elmo '" << getName() << "':");
+    return configuration_.sanityCheck();
   }
 
   Configuration Elmo::getConfiguration() const{

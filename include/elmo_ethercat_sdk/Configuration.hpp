@@ -30,8 +30,13 @@
 namespace elmo {
 
 class Configuration {
-
  public:
+  enum class EncoderPosition{
+    motor,
+    joint,
+    NA
+  };
+
   ModeOfOperationEnum modeOfOperationEnum{ModeOfOperationEnum::NA};
   RxPdoTypeEnum rxPdoTypeEnum{RxPdoTypeEnum::NA};
   TxPdoTypeEnum txPdoTypeEnum{TxPdoTypeEnum::NA};
@@ -51,7 +56,16 @@ class Configuration {
   double motorRatedCurrentA{0};
   double maxCurrentA{0};
   bool useMultipleModeOfOperations{false};
-  int direction{1};
+  int direction{0};
+  EncoderPosition encoderPosition{EncoderPosition::NA};
+
+  /*!
+   * @brief Check whether the parameters are sane.
+   * Prints a list of the checks and whether they failed or passed.
+   * @param[in] silent If true: Do not print. Only return the success of the test.
+   * @return true if the checks are successful.
+   */
+  bool sanityCheck(bool silent = false);
 
  public:
   // stream operator

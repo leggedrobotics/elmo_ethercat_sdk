@@ -18,9 +18,12 @@ Hardware:
   tx_pdo_type:                                    "TxPdoStandard"
   mode_of_operation:                              "CyclicSynchronousTorqueMode"
   use_multiple_modes_of_operation:                true
-  position_encoder_resolution:                    66
-  gear_ratio:                                     [1,1]
+  position_encoder_resolution:                    66 # Encoder 'ticks' per encoder revolution
+  gear_ratio:                                     [1,1] # [input revolutions, output revolutions]
   motor_constant:                                 1.0
   max_current:                                    5.0
   motor_rated_current:                            1.0
   direction:                                      1
+# direction :                                     -1
+  encoder_position:                               motor
+# encoder_position:                               joint

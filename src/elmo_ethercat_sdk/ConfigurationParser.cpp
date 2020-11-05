@@ -169,6 +169,39 @@ bool getModeFromFile(YAML::Node& yamlNode, const std::string& varName, ModeOfOpe
   }
 }
 
+/*!
+ * Function to read an Encoder Position enum from the yaml file.
+ * @param[in] yamlNode	the node containing the requested value
+ * @param [in] varName	The name of the variable
+ * @param [out] encoderPosition Position of the encoder
+ * @return	true on success
+ */
+bool getEncoderPositionFromFile(YAML::Node& yamlNode, const std::string& varName, Configuration::EncoderPosition& encoderPosition) {
+  if (!yamlNode[varName].IsDefined()) {
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
+                     << varName << "' is missing. Default value will be used.");
+    return false;
+  }
+  try {
+    std::string str = yamlNode[varName].as<std::string>();
+    /// no switch statements with std::string
+    if (str == "motor") {
+      encoderPosition = Configuration::EncoderPosition::motor;
+      return true;
+    } else if (str == "joint") {
+      encoderPosition = Configuration::EncoderPosition::joint;
+      return true;
+    } else {
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getEncoderPositionFromFile] Unsupported encoder position");
+      return false;
+    }
+  } catch (...) {
+    MELO_ERROR_STREAM("[elmo_ethercat_sdk:ConfigurationParser::getEncoderPositionFromFile] Error while parsing value \""
+                      << varName << "\", default values will be used");
+    return false;
+  }
+}
+
 ConfigurationParser::ConfigurationParser(const std::string& filename) {
   YAML::Node configNode;
   try{
@@ -298,6 +331,13 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
     if (getValueFromFile(hardwareNode, "direction", direction)) {
       configuration_.direction = direction;
     }
+    Configuration::EncoderPosition encoderPosition;
+    if (getEncoderPositionFromFile(hardwareNode, "encoder_position", encoderPosition)){
+      configuration_.encoderPosition = encoderPosition;
+    }
+  }
+  if(!configuration_.sanityCheck(true)){
+    throw std::runtime_error("Parsed Configuration did not pass sanity check");
   }
 }
 

@@ -220,7 +220,7 @@ namespace elmo{
 
     stagedCommand_.doUnitConversion();
 
-    if(allowModeChange_){
+    if(allowModeChange_ && command.getModeOfOperation() != ModeOfOperationEnum::NA){
       modeOfOperation_ = command.getModeOfOperation();
     }else{
       if(modeOfOperation_ != command.getModeOfOperation() && command.getModeOfOperation() != ModeOfOperationEnum::NA){

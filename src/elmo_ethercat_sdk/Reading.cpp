@@ -263,9 +263,13 @@ void Reading::configureReading(const Configuration& configuration) {
   forceAppendEqualError_ = configuration.forceAppendEqualError;
   forceAppendEqualFault_ = configuration.forceAppendEqualFault;
 
-  positionFactorIntegerToRad_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution);
-
-  velocityFactorIntegerPerSecToRadPerSec_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution);
+  if(configuration.encoderPosition == Configuration::EncoderPosition::joint){
+    positionFactorIntegerToRad_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution);
+    velocityFactorIntegerPerSecToRadPerSec_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution);
+  } else if(configuration.encoderPosition == Configuration::EncoderPosition::motor){
+    positionFactorIntegerToRad_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution) / configuration.gearRatio;
+    velocityFactorIntegerPerSecToRadPerSec_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution) / configuration.gearRatio;
+  }
 
   double currentFactor = configuration.motorRatedCurrentA / 1000.0;
 

@@ -19,10 +19,80 @@
  */
 
 #include <iomanip>
+#include <string>
+#include <vector>
+#include <utility>
+#include <algorithm>
 
 #include "elmo_ethercat_sdk/Configuration.hpp"
 
 namespace elmo {
+
+bool Configuration::sanityCheck(bool silent) {
+
+  bool success = true;
+  std::string message = "";
+  auto check_and_inform = [&message, &success] (std::pair<bool, std::string> test) {
+    if(test.first) {
+      message += "\033[32m✓\t";
+      message += test.second;
+      message += "\033[m\n";
+      success &= true;
+    } else {
+      message += "\033[31m❌\t";
+      message += test.second;
+      message += "\033[m\n";
+      success = false;
+    }
+  };
+
+  const std::vector<std::pair<bool, std::string>> sanity_tests = {
+    {
+      (driveStateChangeMinTimeout <= driveStateChangeMaxTimeout),
+      "drive_state_change_min_timeout ≤ drive_state_change_max_timeout"
+    },
+    {
+      (motorConstant > 0),
+      "motor_constant > 0"
+    },
+    {
+      (motorRatedCurrentA > 0),
+      "motor_rated_current > 0"
+    },
+    {
+      (maxCurrentA > 0),
+      "max_current > 0"
+    },
+    {
+      (positionEncoderResolution > 0),
+      "position_encoder_resolution > 0"
+    },
+    {
+      (gearRatio > 0),
+      "gear_ratio > 0"
+    },
+    {
+      (direction == 1 || direction == -1),
+      "direction ∈ {1, -1}"
+    },
+    {
+      (encoderPosition == EncoderPosition::motor || encoderPosition == EncoderPosition::joint),
+      "encoder_position ∈ {\"motor\", \"joint\"}"
+    },
+    {
+    (modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousVelocityMode ||
+      modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousTorqueMode),
+    "mode_of_operation ∈ {\"CyclicSynchronousVelocityMode\", \"CyclicSynchronounsTorqueMode\"}"
+    },
+  };
+
+  std::for_each(sanity_tests.begin(), sanity_tests.end(), check_and_inform);
+
+  if(!silent)
+    std::cout << message << std::endl;
+
+  return success;
+}
 
 std::string modeOfOperationString(ModeOfOperationEnum modeOfOperation_) {
   switch (modeOfOperation_) {
@@ -72,14 +142,26 @@ std::string txPdoString(TxPdoTypeEnum txPdo) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Configuration& configuration) {
-  std::string modeOfOperation_ = modeOfOperationString(configuration.modeOfOperationEnum);
+  std::string modeOfOperation = modeOfOperationString(configuration.modeOfOperationEnum);
   std::string rxPdo = rxPdoString(configuration.rxPdoTypeEnum);
   std::string txPdo = txPdoString(configuration.txPdoTypeEnum);
+
+  std::string encoderPosition = "NA";
+  if(configuration.encoderPosition == Configuration::EncoderPosition::motor)
+      encoderPosition = "motor";
+  else if(configuration.encoderPosition == Configuration::EncoderPosition::joint)
+      encoderPosition = "joint";
+
+  std::string direction = "ERROR";
+  if(configuration.direction == 1)
+    direction = "+1";
+  else if(configuration.direction == -1)
+    direction = "-1";
 
   // The size of the second columne
   unsigned int tmp1 = rxPdo.size();
   unsigned int tmp2 = txPdo.size();
-  unsigned int tmp3 = modeOfOperation_.size();
+  unsigned int tmp3 = modeOfOperation.size();
   unsigned int len2 = tmp1 >= tmp2 ? tmp1 : tmp2;
   len2 = len2 >= tmp3 ? len2 : tmp3;
   len2++;
@@ -90,8 +172,20 @@ std::ostream& operator<<(std::ostream& os, const Configuration& configuration) {
      << "|\n"
      << std::setw(43) << std::setfill('-') << "|" << std::setw(len2 + 2) << "+"
      << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Direction:"
+     << "| " << std::setw(len2) << direction << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Encoder Position:"
+     << "| " << std::setw(len2) << encoderPosition << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Max Current [A]:"
+     << "| " << std::setw(len2) << configuration.maxCurrentA << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Motor Rated Current [A]:"
+     << "| " << std::setw(len2) << configuration.motorRatedCurrentA << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Motor Constant:"
+     << "| " << std::setw(len2) << configuration.motorConstant << "|\n"
      << std::setfill(' ') << std::setw(43) << "| Mode of Operation:"
-     << "| " << std::setw(len2) << modeOfOperation_ << "|\n"
+     << "| " << std::setw(len2) << modeOfOperation << "|\n"
+     << std::setfill(' ') << std::setw(43) << "| Multiple Modes of Operation:"
+     << "| " << std::setw(len2) << configuration.useMultipleModeOfOperations << "|\n"
      << std::setw(43) << "| Rx PDO Type:"
      << "| " << std::setw(len2) << rxPdo << "|\n"
      << std::setw(43) << "| Tx PDO Type:"

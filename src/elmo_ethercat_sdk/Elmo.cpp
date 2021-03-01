@@ -132,12 +132,12 @@ namespace elmo{
     switch (configuration_.rxPdoTypeEnum) {
       case RxPdoTypeEnum::RxPdoStandard: {
         RxPdoStandard rxPdo{};
-        rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw();
-        rxPdo.targetVelocity_ = stagedCommand_.getTargetVelocityRaw();
-        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw();
+        rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw() * configuration_.direction;
+        rxPdo.targetVelocity_ = stagedCommand_.getTargetVelocityRaw() * configuration_.direction;
+        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
         rxPdo.maxTorque_ = stagedCommand_.getMaxTorqueRaw();
         rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
-        rxPdo.torqueOffset_ = stagedCommand_.getTorqueOffsetRaw();
+        rxPdo.torqueOffset_ = stagedCommand_.getTorqueOffsetRaw() * configuration_.direction;
         rxPdo.controlWord_ = controlword_.getRawControlword();
 
         // actually writing to the hardware
@@ -145,7 +145,7 @@ namespace elmo{
       } break;
       case RxPdoTypeEnum::RxPdoCST: {
         RxPdoCST rxPdo{};
-        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw();
+        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
         rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
         rxPdo.controlWord_ = controlword_.getRawControlword();
 
@@ -170,23 +170,23 @@ namespace elmo{
         TxPdoStandard txPdo{};
         // reading from the bus
         bus_->readTxPdo(address_, txPdo);
-        reading_.setActualPosition(txPdo.actualPosition_);
+        reading_.setActualPosition(txPdo.actualPosition_ * configuration_.direction);
         reading_.setDigitalInputs(txPdo.digitalInputs_);
-        reading_.setActualVelocity(txPdo.actualVelocity_);
+        reading_.setActualVelocity(txPdo.actualVelocity_ * configuration_.direction);
         reading_.setStatusword(txPdo.statusword_);
         reading_.setAnalogInput(txPdo.analogInput_);
-        reading_.setActualCurrent(txPdo.actualCurrent_);
+        reading_.setActualCurrent(txPdo.actualCurrent_ * configuration_.direction);
         reading_.setBusVoltage(txPdo.busVoltage_);
       } break;
       case TxPdoTypeEnum::TxPdoCST: {
         TxPdoCST txPdo{};
         // reading from the bus
         bus_->readTxPdo(address_, txPdo);
-        reading_.setActualPosition(txPdo.actualPosition_);
-        reading_.setActualCurrent(txPdo.actualTorque_);  /// torque readings are actually current readings,
+        reading_.setActualPosition(txPdo.actualPosition_ * configuration_.direction);
+        reading_.setActualCurrent(txPdo.actualTorque_ * configuration_.direction);  /// torque readings are actually current readings,
                                                         /// the conversion is handled later
         reading_.setStatusword(txPdo.statusword_);
-        reading_.setActualVelocity(txPdo.actualVelocity_);
+        reading_.setActualVelocity(txPdo.actualVelocity_ * configuration_.direction);
       } break;
 
       default:
@@ -210,10 +210,22 @@ namespace elmo{
   void Elmo::stageCommand(const Command& command){
     std::lock_guard<std::recursive_mutex> lock(stagedCommandMutex_);
     stagedCommand_ = command;
-    stagedCommand_.setPositionFactorRadToInteger(
-      static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
-    stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(
-      static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+    if(configuration_.encoderPosition == Configuration::EncoderPosition::joint){
+      stagedCommand_.setPositionFactorRadToInteger(
+        static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+      stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(
+        static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+    } else if(configuration_.encoderPosition == Configuration::EncoderPosition::motor){
+      stagedCommand_.setPositionFactorRadToInteger(
+        static_cast<double>(configuration_.positionEncoderResolution) /
+        (2.0 * M_PI) * configuration_.gearRatio);
+      stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(
+        static_cast<double>(configuration_.positionEncoderResolution) /
+        (2.0 * M_PI) * configuration_.gearRatio);
+    } else {
+      stagedCommand_.setPositionFactorRadToInteger(0.0);
+      stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(0.0);
+    }
 
     double currentFactorAToInt = 1000.0 / configuration_.motorRatedCurrentA;
     stagedCommand_.setCurrentFactorAToInteger(currentFactorAToInt);
@@ -228,7 +240,7 @@ namespace elmo{
 
     stagedCommand_.doUnitConversion();
 
-    if(allowModeChange_){
+    if(allowModeChange_ && command.getModeOfOperation() != ModeOfOperationEnum::NA){
       modeOfOperation_ = command.getModeOfOperation();
     }else{
       if(modeOfOperation_ != command.getModeOfOperation() && command.getModeOfOperation() != ModeOfOperationEnum::NA){
@@ -250,7 +262,9 @@ namespace elmo{
 
   bool Elmo::loadConfigFile(const std::string &fileName){
     ConfigurationParser configurationParser(fileName);
-    return loadConfiguration(configurationParser.getConfiguration());
+    const bool success = loadConfiguration(configurationParser.getConfiguration());
+    if (!success) throw std::runtime_error("Parsed Configuration did not pass sanity check");
+    return success;
   }
 
   bool Elmo::loadConfigNode(YAML::Node configNode){
@@ -259,7 +273,6 @@ namespace elmo{
   }
 
   bool Elmo::loadConfiguration(const Configuration& configuration){
-    bool success = true;
     reading_.configureReading(configuration);
 
     // Check if changing mode of operation will be allowed
@@ -271,7 +284,8 @@ namespace elmo{
     modeOfOperation_ = configuration.modeOfOperationEnum;
 
     configuration_ = configuration;
-    return success;
+    MELO_INFO_STREAM("Configuration Sanity Check of Elmo '" << getName() << "':");
+    return configuration_.sanityCheck();
   }
 
   Configuration Elmo::getConfiguration() const{

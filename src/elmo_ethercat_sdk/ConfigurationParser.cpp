@@ -336,9 +336,6 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
       configuration_.encoderPosition = encoderPosition;
     }
   }
-  if(!configuration_.sanityCheck(true)){
-    throw std::runtime_error("Parsed Configuration did not pass sanity check");
-  }
 }
 
 Configuration ConfigurationParser::getConfiguration() const {

@@ -20,43 +20,78 @@
 
 #include <iomanip>
 #include <string>
+#include <vector>
+#include <utility>
+#include <algorithm>
 
 #include "elmo_ethercat_sdk/Configuration.hpp"
 
 namespace elmo {
 
 bool Configuration::sanityCheck(bool silent) {
-#define CHECK_AND_INFORM(bool_condition)                                       \
-  if (bool_condition) {                                                        \
-    message += "\033[32m✓\t";                                                  \
-    message += #bool_condition;                                                \
-    message += "\033[m\n";                                                     \
-    success &= true;                                                           \
-  } else {                                                                     \
-    message += "\033[31m❌\t";                                                  \
-    message += #bool_condition;                                                \
-    message += "\033[m\n";                                                     \
-    success = false;                                                           \
-  }
 
   bool success = true;
   std::string message = "";
-  CHECK_AND_INFORM(driveStateChangeMinTimeout <= driveStateChangeMaxTimeout);
-  CHECK_AND_INFORM(motorConstant > 0);
-  CHECK_AND_INFORM(motorRatedCurrentA > 0);
-  CHECK_AND_INFORM(maxCurrentA > 0);
-  CHECK_AND_INFORM(positionEncoderResolution > 0);
-  CHECK_AND_INFORM(gearRatio > 0);
-  CHECK_AND_INFORM(direction == 1 || direction == -1);
-  CHECK_AND_INFORM(encoderPosition == EncoderPosition::motor || encoderPosition == EncoderPosition::joint);
-  CHECK_AND_INFORM(modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousVelocityMode ||
-                   modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousTorqueMode);
+  auto check_and_inform = [&message, &success] (std::pair<bool, std::string> test) {
+    if(test.first) {
+      message += "\033[32m✓\t";
+      message += test.second;
+      message += "\033[m\n";
+      success &= true;
+    } else {
+      message += "\033[31m❌\t";
+      message += test.second;
+      message += "\033[m\n";
+      success = false;
+    }
+  };
+
+  const std::vector<std::pair<bool, std::string>> sanity_tests = {
+    {
+      (driveStateChangeMinTimeout <= driveStateChangeMaxTimeout),
+      "drive_state_change_min_timeout ≤ drive_state_change_max_timeout"
+    },
+    {
+      (motorConstant > 0),
+      "motor_constant > 0"
+    },
+    {
+      (motorRatedCurrentA > 0),
+      "motor_rated_current > 0"
+    },
+    {
+      (maxCurrentA > 0),
+      "max_current > 0"
+    },
+    {
+      (positionEncoderResolution > 0),
+      "position_encoder_resolution > 0"
+    },
+    {
+      (gearRatio > 0),
+      "gear_ratio > 0"
+    },
+    {
+      (direction == 1 || direction == -1),
+      "direction ∈ {1, -1}"
+    },
+    {
+      (encoderPosition == EncoderPosition::motor || encoderPosition == EncoderPosition::joint),
+      "encoder_position ∈ {\"motor\", \"joint\"}"
+    },
+    {
+    (modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousVelocityMode ||
+      modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousTorqueMode),
+    "mode_of_operation ∈ {\"CyclicSynchronousVelocityMode\", \"CyclicSynchronounsTorqueMode\"}"
+    },
+  };
+
+  std::for_each(sanity_tests.begin(), sanity_tests.end(), check_and_inform);
+
   if(!silent)
     std::cout << message << std::endl;
 
   return success;
-
-#undef CHECK_AND_INFORM
 }
 
 std::string modeOfOperationString(ModeOfOperationEnum modeOfOperation_) {

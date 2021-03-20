@@ -96,6 +96,11 @@ namespace elmo{
     uint16_t maxCurrent = static_cast<uint16_t>(floor(1000.0 * configuration_.maxCurrentA));
     success &= sdoVerifyWrite(OD_INDEX_MAX_CURRENT, 0, false, maxCurrent);
 
+    // Actual voltage on 5v bus (e.g. for connected analog sensors)
+    uint16_t actual5vVoltage = 5000;
+    success &= sendSdoRead(OD_INDEX_5VDC_SUPPLY, 0, false, actual5vVoltage); // [mV]
+    actual5vVoltage_ = static_cast<double>(actual5vVoltage)/1000.0; // [V]
+
     if(!success){
       MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::preStartupOnlineConfiguration] hardware configuration of '"
                         << name_ <<"' not successful!");

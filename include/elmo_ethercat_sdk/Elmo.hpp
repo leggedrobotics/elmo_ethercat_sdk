@@ -77,6 +77,9 @@ namespace elmo {
       bool setDriveStateViaPdo(const DriveState& driveState, const bool waitForState);
       bool lastPdoStateChangeSuccessful() const { return stateChangeSuccessful_; }
 
+    // Other
+      double getActual5vVoltage() { return actual5vVoltage_; }
+
     protected:
       void engagePdoStateMachine();
       bool mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum);
@@ -106,6 +109,8 @@ namespace elmo {
       uint16_t numberOfSuccessfulTargetStateReadings_{0};
       std::atomic<bool> stateChangeSuccessful_{false};
 
+      // actual voltage on 5v line (e.g. to configure analog sensors)
+      double actual5vVoltage_{5.0};
 
     // Configurable parameters
     protected:

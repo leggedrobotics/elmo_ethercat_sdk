@@ -27,6 +27,7 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <stdexcept>
 
 namespace elmo{
   std::string binstring(uint16_t var){
@@ -50,7 +51,11 @@ namespace elmo{
 
   Elmo::SharedPtr Elmo::deviceFromFile(const std::string &configFile, const std::string& name, const uint32_t address){
     auto elmo = std::make_shared<Elmo>(name, address);
-    elmo->loadConfigFile(configFile);
+    if(!elmo->loadConfigFile(configFile)){
+      MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::deviceFromFile] loading config file '"
+                        << configFile << "' for '" << name << "' not successful.");
+      throw std::runtime_error("[elmo_ethercat_sdk:Elmo::deviceFromFile] config file loading error");
+    }
     return elmo;
   }
 
@@ -267,9 +272,7 @@ namespace elmo{
 
   bool Elmo::loadConfigFile(const std::string &fileName){
     ConfigurationParser configurationParser(fileName);
-    const bool success = loadConfiguration(configurationParser.getConfiguration());
-    if (!success) throw std::runtime_error("Parsed Configuration did not pass sanity check");
-    return success;
+    return loadConfiguration(configurationParser.getConfiguration());
   }
 
   bool Elmo::loadConfigNode(YAML::Node configNode){

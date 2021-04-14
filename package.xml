@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!-->
+Copyright (2019-2020) Robotics Systems Lab - ETH Zurich:
+Jonas Junger, Johannes Pankert, Fabio Dubois, Lennart Nachtigall,
+Markus Staeuble
+
+This file is part of the elmo_ethercat_sdk.
+The elmo_ethercat_sdk is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+The elmo_ethercat_sdk is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
+<-->
+
+<package format="2">
+  <name>elmo_ethercat_sdk</name>
+  <version>1.0.1</version>
+  <description>Elmo Ethercat implementation.</description>
+  
+  <license>GPLv3</license>
+  <author email="jungerj@student.ethz.ch">Jonas Junger</author>
+  <author email="johannes.pankert@mavt.ethz.ch">Johannes Pankert</author>
+  <author email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</author>
+  <author email="duboisf@mavt.ethz.ch">Fabio Dubois</author>
+  <author>Markus Staeuble</author>
+  <maintainer email="jungerj@student.ethz.ch">Jonas Junger</maintainer>
+  <url type="website">https://bitbucket.org/leggedrobotics/elmo_ethercat_sdk</url>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>message_logger</depend>
+  <depend>soem_interface</depend>
+  <depend>yaml-cpp</depend>
+  <depend>ethercat_sdk_master</depend>
+  
+</package>

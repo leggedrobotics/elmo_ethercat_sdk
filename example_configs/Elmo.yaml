@@ -1,0 +1,97 @@
+# Example config file for Elmo Drives
+Elmo:
+  config_run_sdo_verify_timeout:                  50000
+  print_debug_messages:                           true
+  use_raw_commands:                               false
+  drive_state_change_min_timeout:                 1000
+  drive_state_change_max_timeout:                 1000000
+  min_number_of_successful_target_state_readings: 50
+
+Reading:
+  force_append_equal_error:                       true
+  force_append_equal_fault:                       false
+  error_storage_capacity:                         100
+  fault_storage_capacity:                         100
+
+Hardware:
+  rx_pdo_type:                                    "RxPdoStandard"
+  tx_pdo_type:                                    "TxPdoStandard"
+  mode_of_operation:                              "CyclicSynchronousTorqueMode"
+  use_multiple_modes_of_operation:                true
+  position_encoder_resolution:                    66 # Encoder 'ticks' per encoder revolution
+  gear_ratio:                                     [1,1] # [input revolutions, output revolutions]
+  motor_constant:                                 1.0
+  max_current:                                    5.0
+  motor_rated_current:                            1.0
+  direction:                                      1
+# direction :                                     -1
+  encoder_position:                               motor
+# encoder_position:                               joint
+
+# Explanation for some **Hardware** parameters
+# ════════════════════════════════════════════
+
+# motor_rated_current:
+# ────────────────────
+
+#   This is used as an internal scaling factor. The hardware can set the
+#   target current to (signed) integer multiples of
+#   motor_rated_current/1000. The current gets represented as a 16bit
+#   signed integer. Setting motor_rated_current to an expected average
+#   current value is good practice. This value must be greater than 0.
+
+
+# gear_ratio:
+# ───────────
+
+#   Represents the gearing ratio between the motor and the joint as an
+#   array of two unsigned integers:
+
+#   [input revolutions, output revolutions].
+
+
+# direction:
+# ──────────
+
+#   Either 1 or -1, for positive and negative direction respectively. The
+#   ’positive’ direction is defined by the hardware configuration of the
+#   Elmo (EASII gui).
+
+
+# encoder_position:
+# ─────────────────
+
+#   Either ’motor’ or ’joint’.
+#   • ’motor’: The encoder is assumed to be on the motor side of the
+#     gearing. This means that ’position_encoder_resolution’ is assumed to
+#     be the number of ticks per MOTOR REVOLUTION. The velocity and
+#     position values read from the drive will thus be divided by the gear
+#     ratio, while the velocity commands will by multiplied by the gear
+#     ratio (where gear ratio = input_revolutions / output_revolutions).
+#   • ’joint’: The encoder is assumed to be on the joint side of the
+#     gearing. This means that ’position_encoder_resolution’ is assumed to
+#     be the number of ticks per JOINT REVOLUTION. The velocity and
+#     position values read from and commanded to the drive will thus not
+#     be altered.
+
+#   Note: All commands / readings are always in joint space (if the gear
+#   ratio is set correctly). A correct configuration of the Elmo drives
+#   over the EASII gui is required in order for the torque / current
+#   /velocity readings and commands to have the correct magnitude and
+#   sign.
+
+
+# use_multiple_modes_of_operation:
+# ────────────────────────────────
+
+#   Boolean value.
+#   • true: The mode of operation can be changed at any time during the
+#     PDO communication by calling
+#     ┌────
+#     │ elmo::Command::setModeOfOperation(elmo::ModeOfOperationEnum::...)
+#     └────
+#     The mode of operation is initialized by the mode from the config
+#     parameter ’mode_of_operation’. Whenever a command has the mode of
+#     operation ’NA’ (e.g. no mode has been set explicitly) then the mode
+#     is not changed, i.e. the old mode continues to be used. This
+#     requires that The standard rx and tx PDO types are used.

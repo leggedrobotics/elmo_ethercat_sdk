@@ -179,6 +179,10 @@ class Reading{
    */
   Reading() = default;
 
+  bool hasUnreadError() const;
+
+  bool hasUnreadFault() const;
+
   /*!
    * @brief	Load parameters from Configuration object
    * @param[in] configuration	The Configuration with the requested

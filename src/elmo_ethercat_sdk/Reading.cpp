@@ -257,6 +257,14 @@ uint16_t Reading::getLastFault() const {
   return lastFault_.first;
 }
 
+bool Reading::hasUnreadError() const {
+  return hasUnreadError_;
+}
+
+bool Reading::hasUnreadFault() const {
+  return hasUnreadFault_;
+}
+
 void Reading::configureReading(const Configuration& configuration) {
   errorStorageCapacity_ = configuration.errorStorageCapacity;
   faultStorageCapacity_ = configuration.faultStorageCapacity;

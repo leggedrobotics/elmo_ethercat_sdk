@@ -32,12 +32,12 @@ along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
   <author>Markus Staeuble</author>
   <maintainer email="jungerj@student.ethz.ch">Jonas Junger</maintainer>
   <url type="website">https://bitbucket.org/leggedrobotics/elmo_ethercat_sdk</url>
-  
-  <buildtool_depend>catkin</buildtool_depend>
-
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>message_logger</depend>
-  <depend>soem_interface</depend>
   <depend>yaml-cpp</depend>
   <depend>ethercat_sdk_master</depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
   
 </package>

@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(elmo_ethercat_sdk)
 
 ## Set the C++ standard.
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 ## Enable all compiler warnings and treat them as errors.
 add_compile_options(-Wall -Wextra -Wpedantic)
@@ -28,40 +28,14 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 ## Export compile commands for clang.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CATKIN_PACKAGE_DEPENDENCIES
-  message_logger
-  ethercat_sdk_master
-)
-
-find_package(catkin REQUIRED
-  COMPONENTS
-    ${CATKIN_PACKAGE_DEPENDENCIES}
-)
-
+find_package(ament_cmake REQUIRED)
+find_package(message_logger REQUIRED)
+find_package(ethercat_sdk_master REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
-###################################
-## catkin specific configuration ##
-###################################
-
-catkin_package(
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    ${PROJECT_NAME}
-  CATKIN_DEPENDS
-    ${CATKIN_PACKAGE_DEPENDENCIES}
-)
 
 ###########
 ## Build ##
 ###########
-
-include_directories(
-  include
-  SYSTEM
-    ${catkin_INCLUDE_DIRS}
-)
 
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/Elmo.cpp
@@ -74,30 +48,42 @@ add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/DriveState.cpp
   src/${PROJECT_NAME}/PdoTypeEnum.cpp
 )
-add_dependencies(
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+ament_target_dependencies(
   ${PROJECT_NAME}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${YAML_CPP_LIBRARIES}
+    ethercat_sdk_master
+    message_logger
+    yaml-cpp
 )
 
+ament_export_dependencies(
+    message_logger
+    ethercat_sdk_master
+    ament_cmake
+)
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
 #############
 ## Install ##
 #############
 
 install(
-  TARGETS
-    ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Target
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
 )
 
 install(
-  DIRECTORY
+    DIRECTORY
     include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+    DESTINATION include
 )
+ament_package()

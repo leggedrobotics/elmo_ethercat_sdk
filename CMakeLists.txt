@@ -28,6 +28,12 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 ## Export compile commands for clang.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(PACKAGE_DEPENDENCIES
+    ament_cmake
+    message_logger
+    ethercat_sdk_master
+    yaml-cpp )
+
 find_package(ament_cmake REQUIRED)
 find_package(message_logger REQUIRED)
 find_package(ethercat_sdk_master REQUIRED)
@@ -55,17 +61,10 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(
-  ${PROJECT_NAME}
-    ethercat_sdk_master
-    message_logger
-    yaml-cpp
+  ${PROJECT_NAME} ${PACKAGE_DEPENDENCIES}
 )
 
-ament_export_dependencies(
-    message_logger
-    ethercat_sdk_master
-    ament_cmake
-)
+ament_export_dependencies(${PACKAGE_DEPENDENCIES})
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 #############
@@ -82,8 +81,7 @@ install(
 )
 
 install(
-    DIRECTORY
-    include/${PROJECT_NAME}/
+    DIRECTORY include/
     DESTINATION include
 )
 ament_package()

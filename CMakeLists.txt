@@ -64,16 +64,14 @@ ament_target_dependencies(
   ${PROJECT_NAME} ${PACKAGE_DEPENDENCIES}
 )
 
-ament_export_dependencies(${PACKAGE_DEPENDENCIES})
-ament_export_include_directories(include)
-ament_export_libraries(${PROJECT_NAME})
+
 #############
 ## Install ##
 #############
 
 install(
     TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}Target
+    EXPORT ${PROJECT_NAME}_export
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
@@ -84,4 +82,9 @@ install(
     DIRECTORY include/
     DESTINATION include
 )
+
+ament_export_dependencies(${PACKAGE_DEPENDENCIES})
+# ament_export_include_directories(include)
+ament_export_targets(${PROJECT_NAME}_export HAS_LIBRARY_TARGET)
+
 ament_package()

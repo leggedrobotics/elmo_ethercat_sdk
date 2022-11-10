@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #include <cstdint>
 
@@ -34,8 +34,8 @@ namespace elmo {
 template <typename T>
 bool getValueFromFile(YAML::Node& yamlNode, const std::string& varName, T& var) {
   if (!yamlNode[varName].IsDefined()) {
-    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
-                     << varName << "' is missing. Default value will be used.");
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '" << varName
+                                                                                            << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -57,8 +57,8 @@ bool getValueFromFile(YAML::Node& yamlNode, const std::string& varName, T& var) 
  */
 bool getRxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, RxPdoTypeEnum& rxPdo) {
   if (!yamlNode[varName].IsDefined()) {
-    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
-                     << varName << "' is missing. Default value will be used.");
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '" << varName
+                                                                                            << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -93,8 +93,8 @@ bool getRxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, RxPdoTyp
  */
 bool getTxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, TxPdoTypeEnum& txPdo) {
   if (!yamlNode[varName].IsDefined()) {
-    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
-                     << varName << "' is missing. Default value will be used.");
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '" << varName
+                                                                                            << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -130,8 +130,8 @@ bool getTxPdoFromFile(YAML::Node& yamlNode, const std::string& varName, TxPdoTyp
  */
 bool getModeFromFile(YAML::Node& yamlNode, const std::string& varName, ModeOfOperationEnum& mode) {
   if (!yamlNode[varName].IsDefined()) {
-    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
-                     << varName << "' is missing. Default value will be used.");
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '" << varName
+                                                                                            << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -178,8 +178,8 @@ bool getModeFromFile(YAML::Node& yamlNode, const std::string& varName, ModeOfOpe
  */
 bool getEncoderPositionFromFile(YAML::Node& yamlNode, const std::string& varName, Configuration::EncoderPosition& encoderPosition) {
   if (!yamlNode[varName].IsDefined()) {
-    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '"
-                     << varName << "' is missing. Default value will be used.");
+    MELO_WARN_STREAM("[elmo_ethercat_sdk:ConfigurationParser::parseConfiguration]: field '" << varName
+                                                                                            << "' is missing. Default value will be used.");
     return false;
   }
   try {
@@ -204,11 +204,11 @@ bool getEncoderPositionFromFile(YAML::Node& yamlNode, const std::string& varName
 
 ConfigurationParser::ConfigurationParser(const std::string& filename) {
   YAML::Node configNode;
-  try{
+  try {
     configNode = YAML::LoadFile(filename);
-  }catch(...){
-    MELO_FATAL_STREAM("[elmo_ethercat_sdk:ConfigurationParser::ConfigurationParser] Loading YAML configuration file '"
-                      << filename << "' failed.");
+  } catch (...) {
+    MELO_FATAL_STREAM("[elmo_ethercat_sdk:ConfigurationParser::ConfigurationParser] Loading YAML configuration file '" << filename
+                                                                                                                       << "' failed.");
   }
   parseConfiguration(configNode);
 }
@@ -229,28 +229,27 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
 
     bool printDebugMessages;
     if (getValueFromFile(elmoNode, "print_debug_messages", printDebugMessages)) {
-      configuration_.printDebugMessages = printDebugMessages ;
+      configuration_.printDebugMessages = printDebugMessages;
     }
 
     bool useRawCommands;
     if (getValueFromFile(elmoNode, "use_raw_commands", useRawCommands)) {
-      configuration_.useRawCommands = useRawCommands ;
+      configuration_.useRawCommands = useRawCommands;
     }
 
     unsigned int driveStateChangeMinTimeout;
     if (getValueFromFile(elmoNode, "drive_state_change_min_timeout", driveStateChangeMinTimeout)) {
-      configuration_.driveStateChangeMinTimeout = driveStateChangeMinTimeout ;
+      configuration_.driveStateChangeMinTimeout = driveStateChangeMinTimeout;
     }
 
     unsigned int minNumberOfSuccessfulTargetStateReadings;
-    if (getValueFromFile(elmoNode, "min_number_of_successful_target_state_readings",
-                         minNumberOfSuccessfulTargetStateReadings)) {
-      configuration_.minNumberOfSuccessfulTargetStateReadings = minNumberOfSuccessfulTargetStateReadings ;
+    if (getValueFromFile(elmoNode, "min_number_of_successful_target_state_readings", minNumberOfSuccessfulTargetStateReadings)) {
+      configuration_.minNumberOfSuccessfulTargetStateReadings = minNumberOfSuccessfulTargetStateReadings;
     }
 
     unsigned int driveStateChangeMaxTimeout;
     if (getValueFromFile(elmoNode, "drive_state_change_max_timeout", driveStateChangeMaxTimeout)) {
-      configuration_.driveStateChangeMaxTimeout = driveStateChangeMaxTimeout ;
+      configuration_.driveStateChangeMaxTimeout = driveStateChangeMaxTimeout;
     }
   }
 
@@ -260,22 +259,22 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
 
     bool forceAppendEqualError;
     if (getValueFromFile(readingNode, "force_append_equal_error", forceAppendEqualError)) {
-      configuration_.forceAppendEqualError = forceAppendEqualError ;
+      configuration_.forceAppendEqualError = forceAppendEqualError;
     }
 
     bool forceAppendEqualFault;
     if (getValueFromFile(readingNode, "force_append_equal_fault", forceAppendEqualFault)) {
-      configuration_.forceAppendEqualFault = forceAppendEqualFault ;
+      configuration_.forceAppendEqualFault = forceAppendEqualFault;
     }
 
     unsigned int errorStorageCapacity;
     if (getValueFromFile(readingNode, "error_storage_capacity", errorStorageCapacity)) {
-      configuration_.errorStorageCapacity = errorStorageCapacity ;
+      configuration_.errorStorageCapacity = errorStorageCapacity;
     }
 
     unsigned int faultStorageCapacity;
     if (getValueFromFile(readingNode, "fault_storage_capacity", faultStorageCapacity)) {
-      configuration_.faultStorageCapacity = faultStorageCapacity ;
+      configuration_.faultStorageCapacity = faultStorageCapacity;
     }
   }
 
@@ -285,22 +284,22 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
 
     RxPdoTypeEnum rxPdo;
     if (getRxPdoFromFile(hardwareNode, "rx_pdo_type", rxPdo)) {
-      configuration_.rxPdoTypeEnum = rxPdo ;
+      configuration_.rxPdoTypeEnum = rxPdo;
     }
 
     TxPdoTypeEnum txPdo;
     if (getTxPdoFromFile(hardwareNode, "tx_pdo_type", txPdo)) {
-      configuration_.txPdoTypeEnum = txPdo ;
+      configuration_.txPdoTypeEnum = txPdo;
     }
 
     ModeOfOperationEnum modeOfOperation_;
     if (getModeFromFile(hardwareNode, "mode_of_operation", modeOfOperation_)) {
-      configuration_.modeOfOperationEnum = modeOfOperation_ ;
+      configuration_.modeOfOperationEnum = modeOfOperation_;
     }
 
     int32_t positionEncoderResolution;
     if (getValueFromFile(hardwareNode, "position_encoder_resolution", positionEncoderResolution)) {
-      configuration_.positionEncoderResolution = positionEncoderResolution ;
+      configuration_.positionEncoderResolution = positionEncoderResolution;
     }
 
     std::pair<float, float> gearRatio;
@@ -310,29 +309,29 @@ void ConfigurationParser::parseConfiguration(YAML::Node configNode) {
 
     double motorConstant;
     if (getValueFromFile(hardwareNode, "motor_constant", motorConstant)) {
-      configuration_.motorConstant = motorConstant ;
+      configuration_.motorConstant = motorConstant;
     }
 
     double maxCurrentA;
     if (getValueFromFile(hardwareNode, "max_current", maxCurrentA)) {
-      configuration_.maxCurrentA = maxCurrentA ;
+      configuration_.maxCurrentA = maxCurrentA;
     }
 
     double motorRatedCurrentA;
     if (getValueFromFile(hardwareNode, "motor_rated_current", motorRatedCurrentA)) {
-      configuration_.motorRatedCurrentA = motorRatedCurrentA ;
+      configuration_.motorRatedCurrentA = motorRatedCurrentA;
     }
 
     bool useMultipleModeOfOperations;
     if (getValueFromFile(hardwareNode, "use_multiple_modes_of_operation", useMultipleModeOfOperations)) {
-      configuration_.useMultipleModeOfOperations = useMultipleModeOfOperations ;
+      configuration_.useMultipleModeOfOperations = useMultipleModeOfOperations;
     }
     int direction;
     if (getValueFromFile(hardwareNode, "direction", direction)) {
       configuration_.direction = direction;
     }
     Configuration::EncoderPosition encoderPosition;
-    if (getEncoderPositionFromFile(hardwareNode, "encoder_position", encoderPosition)){
+    if (getEncoderPositionFromFile(hardwareNode, "encoder_position", encoderPosition)) {
       configuration_.encoderPosition = encoderPosition;
     }
   }

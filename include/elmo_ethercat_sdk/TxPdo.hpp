@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 /*!
  * @brief	This file contains the different Tx Pdo structs. Each struct must

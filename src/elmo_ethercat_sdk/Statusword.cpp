@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #include "elmo_ethercat_sdk/Statusword.hpp"
 

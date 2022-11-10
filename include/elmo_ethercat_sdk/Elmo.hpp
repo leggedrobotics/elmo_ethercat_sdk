@@ -21,7 +21,7 @@
 #pragma once
 
 #include "elmo_ethercat_sdk/Command.hpp"
-#include"elmo_ethercat_sdk/DriveState.hpp"
+#include "elmo_ethercat_sdk/DriveState.hpp"
 #include "elmo_ethercat_sdk/Reading.hpp"
 #include "elmo_ethercat_sdk/Controlword.hpp"
 
@@ -31,6 +31,7 @@
 
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 #include <string>
 #include <cstdint>
 #include <chrono>
@@ -69,58 +70,48 @@ namespace elmo {
       bool getStatuswordViaSdo(Statusword& statusword);
       bool setControlwordViaSdo(Controlword& controlword);
       bool setDriveStateViaSdo(const DriveState& driveState);
-    protected:
-      bool stateTransitionViaSdo(const StateTransition& stateTransition);
 
     // PDO
     public:
-      bool setDriveStateViaPdo(const DriveState& driveState, const bool waitForState);
+      bool setDriveStateViaPdo(const DriveState& driveState, bool waitForState);
       bool lastPdoStateChangeSuccessful() const { return stateChangeSuccessful_; }
 
     // Other
       double getActual5vVoltage() { return actual5vVoltage_; }
 
-    protected:
-      void engagePdoStateMachine();
-      bool mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum);
-      Controlword getNextStateTransitionControlword(const DriveState& requestedDriveState,
-                                                    const DriveState& currentDriveState);
-      void autoConfigurePdoSizes();
-
-      uint16_t getTxPdoSize();
-      uint16_t getRxPdoSize();
-
-    // Errors
-    protected:
-      void addErrorToReading(const ErrorType& errorType);
+  private:
+    void engagePdoStateMachine();
+    bool stateTransitionViaSdo(const StateTransition& stateTransition);
+    bool mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum);
+    Controlword getNextStateTransitionControlword(const DriveState& requestedDriveState,
+                                                  const DriveState& currentDriveState);
+    void autoConfigurePdoSizes();
+    uint16_t getTxPdoSize();
+    uint16_t getRxPdoSize();
 
 
+    mutable std::mutex stagedCommandMutex_;
+    Command stagedCommand_;
 
-    protected:
-      Command stagedCommand_;
-      Reading reading_;
-      Configuration configuration_;
-      Controlword controlword_;
-      PdoInfo pdoInfo_;
-      bool hasRead_{false};
-      bool conductStateChange_{false};
-      DriveState targetDriveState_{DriveState::NA};
-      std::chrono::time_point<std::chrono::steady_clock> driveStateChangeTimePoint_;
-      uint16_t numberOfSuccessfulTargetStateReadings_{0};
-      std::atomic<bool> stateChangeSuccessful_{false};
+    mutable std::mutex readingMutex_;
+    Reading reading_;
 
-      // actual voltage on 5v line (e.g. to configure analog sensors)
-      double actual5vVoltage_{5.0};
+    Configuration configuration_;
+    Controlword controlword_;
+    PdoInfo pdoInfo_;
+    uint16_t numberOfSuccessfulTargetStateReadings_{0};
 
-    // Configurable parameters
-    protected:
-      bool allowModeChange_{false};
-      ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
+    mutable std::mutex targetStateMutex_;
+    DriveState targetDriveState_{DriveState::NA};
+    std::atomic<bool> stateChangeSuccessful_{false};
+    std::atomic<bool> conductStateChange_{false};
+    std::condition_variable cvDriveStateMachineSync_;
 
-    protected:
-      mutable std::recursive_mutex stagedCommandMutex_; //TODO required?
-      mutable std::recursive_mutex readingMutex_; //TODO required?
-      mutable std::recursive_mutex mutex_; // TODO: change name!!!!
+    // actual voltage on 5v line (e.g. to configure analog sensors)
+    double actual5vVoltage_{5.0};
+
+    bool allowModeChange_{false};
+    ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
 
   };
 } // namespace elmo

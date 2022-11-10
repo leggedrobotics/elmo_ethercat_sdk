@@ -71,7 +71,6 @@ namespace elmo{
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // use hardware motor rated current value if necessary
-    // TODO test
     if(configuration_.motorRatedCurrentA == 0.0){
       uint32_t motorRatedCurrent;
       success &= sendSdoRead(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
@@ -109,7 +108,6 @@ namespace elmo{
     if(!success){
       MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::preStartupOnlineConfiguration] hardware configuration of '"
                         << name_ <<"' not successful!");
-      addErrorToReading(ErrorType::ConfigurationError);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return success;
@@ -135,7 +133,7 @@ namespace elmo{
     /*!
     * engage the state machine if a state change is requested
     */
-    if (conductStateChange_ && hasRead_) {
+    if (conductStateChange_) {
       engagePdoStateMachine();
     }
 
@@ -143,7 +141,7 @@ namespace elmo{
       case RxPdoTypeEnum::RxPdoStandard: {
         RxPdoStandard rxPdo{};
         {
-          std::lock_guard<std::recursive_mutex> stagedCmdLock(stagedCommandMutex_);
+          std::lock_guard<std::mutex> stagedCmdLock(stagedCommandMutex_);
           rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw() * configuration_.direction;
           rxPdo.targetVelocity_ = stagedCommand_.getTargetVelocityRaw() * configuration_.direction;
           rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
@@ -159,7 +157,7 @@ namespace elmo{
       case RxPdoTypeEnum::RxPdoCST: {
         RxPdoCST rxPdo{};
         {
-          std::lock_guard<std::recursive_mutex> stagedCmdLock(stagedCommandMutex_);
+          std::lock_guard<std::mutex> stagedCmdLock(stagedCommandMutex_);
           rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
           rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
           rxPdo.controlWord_ = controlword_.getRawControlword();
@@ -171,7 +169,6 @@ namespace elmo{
       default:
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateWrite] Unsupported Rx Pdo type for '"
                         << name_ << "'");
-        addErrorToReading(ErrorType::RxPdoTypeError);
     }
 
   }
@@ -179,7 +176,6 @@ namespace elmo{
   void Elmo::updateRead(){
     std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-    // TODO(duboisf): implement some sort of time stamp
     switch (configuration_.txPdoTypeEnum) {
       case TxPdoTypeEnum::TxPdoStandard: {
         TxPdoStandard txPdo{};
@@ -210,11 +206,6 @@ namespace elmo{
         reading_.addError(ErrorType::TxPdoTypeError);
     }
 
-    // set the hasRead_ variable to true since a nes reading was read
-    if (!hasRead_) {
-      hasRead_ = true;
-    }
-
     // Print warning if drive is in Fault state.
     if (reading_.getDriveState() == DriveState::Fault) {
       MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateRead] '"
@@ -223,7 +214,7 @@ namespace elmo{
   }
 
   void Elmo::stageCommand(const Command& command){
-    std::lock_guard<std::recursive_mutex> lock(stagedCommandMutex_);
+    std::lock_guard<std::mutex> lock(stagedCommandMutex_);
     stagedCommand_ = command;
     if(configuration_.encoderPosition == Configuration::EncoderPosition::joint){
       stagedCommand_.setPositionFactorRadToInteger(
@@ -266,12 +257,12 @@ namespace elmo{
   }
 
   Reading Elmo::getReading() const{
-    std::lock_guard<std::recursive_mutex> lock(readingMutex_);
+    std::lock_guard<std::mutex> lock(readingMutex_);
     return reading_;
   }
 
   void Elmo::getReading(Reading &reading) const{
-    std::lock_guard<std::recursive_mutex> lock(readingMutex_);
+    std::lock_guard<std::mutex> lock(readingMutex_);
     reading = reading_;
   }
 
@@ -350,7 +341,6 @@ namespace elmo{
             break;
           default:
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::setDriveStateViaSdo] State Transition not implemented");
-            addErrorToReading(ErrorType::SdoStateTransitionError);
             success = false;
         }
         break;
@@ -379,7 +369,6 @@ namespace elmo{
             break;
           default:
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::setDriveStateViaSdo] State Transition not implemented");
-            addErrorToReading(ErrorType::SdoStateTransitionError);
             success = false;
         }
         break;
@@ -411,7 +400,6 @@ namespace elmo{
             break;
           default:
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::setDriveStateViaSdo] State Transition not implemented");
-            addErrorToReading(ErrorType::SdoStateTransitionError);
             success = false;
         }
         break;
@@ -447,7 +435,6 @@ namespace elmo{
             break;
           default:
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::setDriveStateViaSdo] State Transition not implemented");
-            addErrorToReading(ErrorType::SdoStateTransitionError);
             success = false;
         }
         break;
@@ -484,14 +471,12 @@ namespace elmo{
             break;
           default:
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::setDriveStateViaSdo] State Transition not implemented");
-            addErrorToReading(ErrorType::SdoStateTransitionError);
             success = false;
         }
         break;
 
       default:
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::setDriveStateViaSdo] State Transition not implemented");
-        addErrorToReading(ErrorType::SdoStateTransitionError);
         success = false;
     }
     return success;
@@ -550,20 +535,12 @@ namespace elmo{
         break;
       default:
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::stateTransitionViaSdo] State Transition not implemented");
-        addErrorToReading(ErrorType::SdoStateTransitionError);
         return false;
     }
   }
 
   bool Elmo::setDriveStateViaPdo(const DriveState &driveState, const bool waitForState){
-    bool success = false;
-    /*
-    ** locking the mutex_
-    ** This is not done with a lock_guard here because during the waiting time the
-    ** mutex_ must be unlocked periodically such that PDO writing (and thus state
-    ** changes) may occur at all!
-    */
-    mutex_.lock();
+
 
     // reset the "stateChangeSuccessful_" flag to false such that a new successful
     // state change can be detected
@@ -571,54 +548,24 @@ namespace elmo{
 
     // make the state machine realize that a state change will have to happen
     conductStateChange_ = true;
-
-    // overwrite the target drive state
-    targetDriveState_ = driveState;
-
-    // set the hasRead flag to false such that at least one new reading will be
-    // available when starting the state change
-    hasRead_ = false;
-
-    // set the time point of the last pdo change to now
-    driveStateChangeTimePoint_ = std::chrono::steady_clock::now();
-
-    // set a temporary time point to prevent getting caught in an infinite loop
-    auto driveStateChangeStartTimePoint = std::chrono::steady_clock::now();
+    {
+      std::unique_lock<std::mutex> targetDriveStateLock(targetStateMutex_);
+      targetDriveState_ = driveState;
+    }
 
     // return if no waiting is requested
     if (!waitForState) {
-      // unlock the mutex
-      mutex_.unlock();
-      // return true if no waiting is requested
       return true;
     }
-
-    // Wait for the state change to be successful
-    // during the waiting time the mutex MUST be unlocked!
-
-    while (true) {
-      // break loop as soon as the state change was successful
-      if (stateChangeSuccessful_) {
-        success = true;
-        break;
-      }
-
-      // break the loop if the state change takes too long
-      // this prevents a freezing of the end user's program if the hardware is not
-      // able to change it's state.
-      if ((std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - driveStateChangeStartTimePoint)).count() >
-          configuration_.driveStateChangeMaxTimeout) {
-        break;
-      }
-      // unlock the mutex during sleep time
-      mutex_.unlock();
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      // lock the mutex to be able to check the success flag
-      mutex_.lock();
+    std::unique_lock<std::mutex> targetDriveStateLock(targetStateMutex_);
+    if(!cvDriveStateMachineSync_.wait_for(targetDriveStateLock,
+                                          std::chrono::milliseconds(configuration_.driveStateChangeMaxTimeout),
+                                          [this]()->bool {return stateChangeSuccessful_;})){
+      MELO_WARN_STREAM("[ElmoEtherCAT_sdk] setDriveStateViaPdo Timeout after waiting " <<
+        configuration_.driveStateChangeMaxTimeout << "ms for state change. is PDO update thread running?")
+      return false;
     }
-    // unlock the mutex one last time
-    mutex_.unlock();
-    return success;
+    return true;
   }
 
   bool Elmo::mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum){
@@ -648,12 +595,10 @@ namespace elmo{
 
       case RxPdoTypeEnum::NA:
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map RxPdoTypeEnum::NA, PdoType not configured properly");
-        addErrorToReading(ErrorType::PdoMappingError);
         rxSuccess = false;
         break;
       default:  // Non-implemented type
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map unimplemented RxPdo, PdoType not configured properly");
-        addErrorToReading(ErrorType::PdoMappingError);
         rxSuccess = false;
         break;
     }
@@ -688,12 +633,10 @@ namespace elmo{
 
       case TxPdoTypeEnum::NA:
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map TxPdoTypeEnum::NA, PdoType not configured properly");
-        addErrorToReading(ErrorType::TxPdoMappingError);
         txSuccess = false;
         break;
       default:  // if any case was forgotten
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::mapPdos] Cannot map undefined TxPdo, PdoType not configured properly");
-        addErrorToReading(ErrorType::TxPdoMappingError);
         txSuccess = false;
         break;
     }
@@ -710,7 +653,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "drive state has already been reached for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
             break;
           case DriveState::ReadyToSwitchOn:
             controlword.setStateTransition7();
@@ -731,7 +673,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "PDO state transition not implemented for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
         }
         break;
 
@@ -744,7 +685,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "drive state has already been reached for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
             break;
           case DriveState::SwitchedOn:
             controlword.setStateTransition6();
@@ -762,7 +702,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "PDO state transition not implemented for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
         }
         break;
 
@@ -778,7 +717,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "drive state has already been reached for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
             break;
           case DriveState::OperationEnabled:
             controlword.setStateTransition5();
@@ -793,7 +731,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "PDO state transition not implemented for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
         }
         break;
 
@@ -812,7 +749,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "drive state has already been reached for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
             break;
           case DriveState::QuickStopActive:
             controlword.setStateTransition12();
@@ -824,7 +760,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "PDO state transition not implemented for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
         }
         break;
 
@@ -846,7 +781,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "drive state has already been reached for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
             break;
           case DriveState::Fault:
             controlword.setStateTransition15();
@@ -855,7 +789,6 @@ namespace elmo{
             MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                               << "PDO state transition not implemented for '"
                               << name_ << "'");
-            addErrorToReading(ErrorType::PdoStateTransitionError);
         }
         break;
 
@@ -863,7 +796,6 @@ namespace elmo{
         MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
                           << "PDO state cannot be reached for '"
                           << name_ << "'");
-        addErrorToReading(ErrorType::PdoStateTransitionError);
     }
 
     return controlword;
@@ -884,42 +816,30 @@ namespace elmo{
   }
 
   void Elmo::engagePdoStateMachine(){
-    // locking the mutex
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-    // elapsed time since the last new controlword
-    auto microsecondsSinceChange =
-        (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - driveStateChangeTimePoint_)).count();
 
     // get the current state
     // since we wait until "hasRead" is true, this is guaranteed to be a newly
     // read value
-    const DriveState currentDriveState = reading_.getDriveState();
+    DriveState currentDriveState = reading_.getDriveState();
 
     // check if the state change already was successful:
+    targetStateMutex_.lock();
     if (currentDriveState == targetDriveState_) {
-      numberOfSuccessfulTargetStateReadings_++;
+      numberOfSuccessfulTargetStateReadings_++; //todo remove.
       if (numberOfSuccessfulTargetStateReadings_ >= configuration_.minNumberOfSuccessfulTargetStateReadings) {
         // disable the state machine
         conductStateChange_ = false;
         numberOfSuccessfulTargetStateReadings_ = 0;
         stateChangeSuccessful_ = true;
+        targetStateMutex_.unlock();
+        cvDriveStateMachineSync_.notify_one();
         return;
       }
-    } else if (microsecondsSinceChange > configuration_.driveStateChangeMinTimeout) {
-      // get the next controlword from the state machine
-      controlword_ = getNextStateTransitionControlword(targetDriveState_, currentDriveState);
-      driveStateChangeTimePoint_ = std::chrono::steady_clock::now();
     }
-
-    // set the "hasRead" variable to false such that there will definitely be a
-    // new reading when this method is called again
-    hasRead_ = false;
-
+   // get the next controlword from the state machine (will evalute to the same if we have not moved in the state machine.)
+   controlword_ = getNextStateTransitionControlword(targetDriveState_, currentDriveState);
+   targetStateMutex_.unlock();
   }
 
-  void Elmo::addErrorToReading(const ErrorType& errorType){
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    reading_.addError(errorType);
-  }
 } // namespace elmo

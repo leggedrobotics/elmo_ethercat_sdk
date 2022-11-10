@@ -142,23 +142,28 @@ namespace elmo{
     switch (configuration_.rxPdoTypeEnum) {
       case RxPdoTypeEnum::RxPdoStandard: {
         RxPdoStandard rxPdo{};
-        rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw() * configuration_.direction;
-        rxPdo.targetVelocity_ = stagedCommand_.getTargetVelocityRaw() * configuration_.direction;
-        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
-        rxPdo.maxTorque_ = stagedCommand_.getMaxTorqueRaw();
-        rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
-        rxPdo.torqueOffset_ = stagedCommand_.getTorqueOffsetRaw() * configuration_.direction;
-        rxPdo.controlWord_ = controlword_.getRawControlword();
+        {
+          std::lock_guard<std::recursive_mutex> stagedCmdLock(stagedCommandMutex_);
+          rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw() * configuration_.direction;
+          rxPdo.targetVelocity_ = stagedCommand_.getTargetVelocityRaw() * configuration_.direction;
+          rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
+          rxPdo.maxTorque_ = stagedCommand_.getMaxTorqueRaw();
+          rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
+          rxPdo.torqueOffset_ = stagedCommand_.getTorqueOffsetRaw() * configuration_.direction;
+          rxPdo.controlWord_ = controlword_.getRawControlword();
+        }
 
         // actually writing to the hardware
         bus_->writeRxPdo(address_, rxPdo);
       } break;
       case RxPdoTypeEnum::RxPdoCST: {
         RxPdoCST rxPdo{};
-        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
-        rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
-        rxPdo.controlWord_ = controlword_.getRawControlword();
-
+        {
+          std::lock_guard<std::recursive_mutex> stagedCmdLock(stagedCommandMutex_);
+          rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
+          rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
+          rxPdo.controlWord_ = controlword_.getRawControlword();
+        }
         // actually writing to the hardware
         bus_->writeRxPdo(address_, rxPdo);
       } break;

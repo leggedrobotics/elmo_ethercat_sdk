@@ -812,17 +812,12 @@ void Elmo::engagePdoStateMachine() {
         conductStateChange_ = false;
         numberOfSuccessfulTargetStateReadings_ = 0;
         stateChangeSuccessful_ = true;
+        cvDriveStateMachineSync_.notify_one();
       }
+    } else if (prevDriveState_ != currentDriveState) {
+      prevDriveState_ = currentDriveState;
+      controlword_ = getNextStateTransitionControlword(targetDriveState_, currentDriveState);
     }
-  }
-  if (stateChangeSuccessful_) {
-    cvDriveStateMachineSync_.notify_one();
-  }
-
-  // get the next controlword from the state machine (will evalute to the same if we have not moved in the state machine.)
-  {
-    std::lock_guard<std::mutex> targetDriveStateLock(targetStateMutex_);
-    controlword_ = getNextStateTransitionControlword(targetDriveState_, currentDriveState);
   }
 }
 

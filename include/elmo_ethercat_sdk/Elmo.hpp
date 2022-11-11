@@ -99,6 +99,7 @@ class Elmo : public ecat_master::EthercatDevice {
   PdoInfo pdoInfo_;
   uint16_t numberOfSuccessfulTargetStateReadings_{0};
 
+  DriveState prevDriveState_{DriveState::NA};
   mutable std::mutex targetStateMutex_;
   DriveState targetDriveState_{DriveState::NA};
   std::atomic<bool> stateChangeSuccessful_{false};

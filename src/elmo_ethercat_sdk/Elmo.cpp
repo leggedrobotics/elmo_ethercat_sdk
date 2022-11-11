@@ -542,6 +542,7 @@ bool Elmo::setDriveStateViaPdo(const DriveState& driveState, const bool waitForS
                                          [this]() -> bool { return stateChangeSuccessful_; })) {
     MELO_WARN_STREAM("[ElmoEtherCAT_sdk] setDriveStateViaPdo Timeout after waiting "
                      << configuration_.driveStateChangeMaxTimeout << "ms for state change. is PDO update thread running?")
+    conductStateChange_ = false;  // give up this change.
     return false;
   }
   return true;

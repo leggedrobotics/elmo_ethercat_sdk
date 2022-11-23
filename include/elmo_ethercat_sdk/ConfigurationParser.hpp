@@ -16,13 +16,13 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #pragma once
 
+#include <yaml-cpp/yaml.h>
 #include <message_logger/message_logger.hpp>
 #include <string>
-#include <yaml-cpp/yaml.h>
 
 #include "elmo_ethercat_sdk/Configuration.hpp"
 

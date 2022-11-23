@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #define _USE_MATH_DEFINES  // for M_PI
 #include <cmath>
@@ -24,7 +24,6 @@
 #include "elmo_ethercat_sdk/Reading.hpp"
 
 std::ostream& operator<<(std::ostream& os, const elmo::Reading& reading) {
-  // TODO(duboisf) make table, remove statusword
   os << std::left << std::setw(30) << "Actual Position:" << reading.getActualPosition() << "\n"
      << std::setw(30) << "Actual Velocity:" << reading.getActualVelocity() << "\n"
      << std::setw(30) << "Actual Torque:" << reading.getActualTorque() << "\n"
@@ -38,7 +37,7 @@ std::ostream& operator<<(std::ostream& os, const elmo::Reading& reading) {
   return os;
 }
 
-namespace elmo{
+namespace elmo {
 
 std::string Reading::getDigitalInputString() const {
   std::string binString;
@@ -163,7 +162,6 @@ void Reading::setTorqueFactorIntegerToNm(double torqueFactor) {
   torqueFactorIntegerToNm_ = torqueFactor;
 }
 
-
 double Reading::getAgeOfLastErrorInMicroseconds() const {
   ReadingDuration errorDuration = ReadingClock::now() - lastError_.second;
   return errorDuration.count();
@@ -271,12 +269,13 @@ void Reading::configureReading(const Configuration& configuration) {
   forceAppendEqualError_ = configuration.forceAppendEqualError;
   forceAppendEqualFault_ = configuration.forceAppendEqualFault;
 
-  if(configuration.encoderPosition == Configuration::EncoderPosition::joint){
+  if (configuration.encoderPosition == Configuration::EncoderPosition::joint) {
     positionFactorIntegerToRad_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution);
     velocityFactorIntegerPerSecToRadPerSec_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution);
-  } else if(configuration.encoderPosition == Configuration::EncoderPosition::motor){
+  } else if (configuration.encoderPosition == Configuration::EncoderPosition::motor) {
     positionFactorIntegerToRad_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution) / configuration.gearRatio;
-    velocityFactorIntegerPerSecToRadPerSec_ = (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution) / configuration.gearRatio;
+    velocityFactorIntegerPerSecToRadPerSec_ =
+        (2.0 * M_PI) / static_cast<double>(configuration.positionEncoderResolution) / configuration.gearRatio;
   }
 
   double currentFactor = configuration.motorRatedCurrentA / 1000.0;

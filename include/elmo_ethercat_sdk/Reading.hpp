@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #pragma once
 
@@ -28,8 +28,8 @@
 #include <string>
 
 #include "elmo_ethercat_sdk/Configuration.hpp"
-#include "elmo_ethercat_sdk/Error.hpp"
 #include "elmo_ethercat_sdk/DriveState.hpp"
+#include "elmo_ethercat_sdk/Error.hpp"
 #include "elmo_ethercat_sdk/Statusword.hpp"
 
 namespace elmo {
@@ -48,7 +48,7 @@ using FaultPair = std::pair<uint16_t, ReadingTimePoint>;
 using ErrorTimePairDeque = std::deque<std::pair<ErrorType, double>>;
 using FaultTimePairDeque = std::deque<std::pair<uint16_t, double>>;
 
-class Reading{
+class Reading {
  public:
   /*!
    * raw get methods
@@ -106,7 +106,6 @@ class Reading{
 
   void setTorqueFactorIntegerToNm(double torqueFactor);
 
-
  protected:
   int32_t actualPosition_{0};
   int32_t digitalInputs_{0};
@@ -122,6 +121,7 @@ class Reading{
   double torqueFactorIntegerToNm_{1};
 
   ReadingTimePoint lastReadingTimePoint_;
+
  public:
   /*!
    * returns the age of the last added error in microseconds

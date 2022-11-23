@@ -16,12 +16,12 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #include "elmo_ethercat_sdk/DriveState.hpp"
 
-std::ostream& operator<<(std::ostream& os, const elmo::DriveState& driveState){
-  switch(driveState){
+std::ostream& operator<<(std::ostream& os, const elmo::DriveState& driveState) {
+  switch (driveState) {
     case elmo::DriveState::NotReadyToSwitchOn:
       os << "NotReadyToSwitchOn";
       break;
@@ -49,7 +49,6 @@ std::ostream& operator<<(std::ostream& os, const elmo::DriveState& driveState){
     case elmo::DriveState::NA:
       os << "NA";
       break;
-
   }
   return os;
 }

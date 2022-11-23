@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #include <cstdint>
 #include <vector>
@@ -28,7 +28,7 @@
 #define OD_INDEX_STO_STATUS (0x2086)
 #define OD_INDEX_5VDC_SUPPLY (0x2206)
 #define OD_INDEX_TEMPERATURE (0x22A3)
-//#define OD_INDEX_ELMO_COMMAND_TODO                (0x3000)
+// #define OD_INDEX_ELMO_COMMAND_TODO                (0x3000)
 #define OD_INDEX_ERROR_CODE (0x603F)
 #define OD_INDEX_CONTROLWORD (0x6040)
 #define OD_INDEX_STATUSWORD (0x6041)

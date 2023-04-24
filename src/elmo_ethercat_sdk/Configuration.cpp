@@ -16,24 +16,23 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
+#include <algorithm>
 #include <iomanip>
 #include <string>
-#include <vector>
 #include <utility>
-#include <algorithm>
+#include <vector>
 
 #include "elmo_ethercat_sdk/Configuration.hpp"
 
 namespace elmo {
 
 bool Configuration::sanityCheck(bool silent) {
-
   bool success = true;
   std::string message = "";
-  auto check_and_inform = [&message, &success] (std::pair<bool, std::string> test) {
-    if(test.first) {
+  auto check_and_inform = [&message, &success](std::pair<bool, std::string> test) {
+    if (test.first) {
       message += "\033[32m✓\t";
       message += test.second;
       message += "\033[m\n";
@@ -47,49 +46,23 @@ bool Configuration::sanityCheck(bool silent) {
   };
 
   const std::vector<std::pair<bool, std::string>> sanity_tests = {
-    {
-      (driveStateChangeMinTimeout <= driveStateChangeMaxTimeout),
-      "drive_state_change_min_timeout ≤ drive_state_change_max_timeout"
-    },
-    {
-      (motorConstant > 0),
-      "motor_constant > 0"
-    },
-    {
-      (motorRatedCurrentA > 0),
-      "motor_rated_current > 0"
-    },
-    {
-      (maxCurrentA > 0),
-      "max_current > 0"
-    },
-    {
-      (positionEncoderResolution > 0),
-      "position_encoder_resolution > 0"
-    },
-    {
-      (gearRatio > 0),
-      "gear_ratio > 0"
-    },
-    {
-      (direction == 1 || direction == -1),
-      "direction ∈ {1, -1}"
-    },
-    {
-      (encoderPosition == EncoderPosition::motor || encoderPosition == EncoderPosition::joint),
-      "encoder_position ∈ {\"motor\", \"joint\"}"
-    },
-    {
-    (modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousVelocityMode ||
-      modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousTorqueMode),
-    "mode_of_operation ∈ {\"CyclicSynchronousVelocityMode\", \"CyclicSynchronounsTorqueMode\"}"
-    },
+      {(driveStateChangeMinTimeout <= driveStateChangeMaxTimeout), "drive_state_change_min_timeout ≤ drive_state_change_max_timeout"},
+      {(motorConstant > 0), "motor_constant > 0"},
+      {(motorRatedCurrentA > 0), "motor_rated_current > 0"},
+      {(maxCurrentA > 0), "max_current > 0"},
+      {(positionEncoderResolution > 0), "position_encoder_resolution > 0"},
+      {(gearRatio > 0), "gear_ratio > 0"},
+      {(direction == 1 || direction == -1), "direction ∈ {1, -1}"},
+      {(encoderPosition == EncoderPosition::motor || encoderPosition == EncoderPosition::joint),
+       "encoder_position ∈ {\"motor\", \"joint\"}"},
+      {(modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousVelocityMode ||
+        modeOfOperationEnum == ModeOfOperationEnum::CyclicSynchronousTorqueMode),
+       "mode_of_operation ∈ {\"CyclicSynchronousVelocityMode\", \"CyclicSynchronounsTorqueMode\"}"},
   };
 
   std::for_each(sanity_tests.begin(), sanity_tests.end(), check_and_inform);
 
-  if(!silent)
-    std::cout << message << std::endl;
+  if (!silent) std::cout << message << std::endl;
 
   return success;
 }
@@ -147,15 +120,15 @@ std::ostream& operator<<(std::ostream& os, const Configuration& configuration) {
   std::string txPdo = txPdoString(configuration.txPdoTypeEnum);
 
   std::string encoderPosition = "NA";
-  if(configuration.encoderPosition == Configuration::EncoderPosition::motor)
-      encoderPosition = "motor";
-  else if(configuration.encoderPosition == Configuration::EncoderPosition::joint)
-      encoderPosition = "joint";
+  if (configuration.encoderPosition == Configuration::EncoderPosition::motor)
+    encoderPosition = "motor";
+  else if (configuration.encoderPosition == Configuration::EncoderPosition::joint)
+    encoderPosition = "joint";
 
   std::string direction = "ERROR";
-  if(configuration.direction == 1)
+  if (configuration.direction == 1)
     direction = "+1";
-  else if(configuration.direction == -1)
+  else if (configuration.direction == -1)
     direction = "-1";
 
   // The size of the second columne

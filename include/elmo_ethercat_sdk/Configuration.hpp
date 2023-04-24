@@ -16,7 +16,7 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #pragma once
 
@@ -31,11 +31,7 @@ namespace elmo {
 
 class Configuration {
  public:
-  enum class EncoderPosition{
-    motor,
-    joint,
-    NA
-  };
+  enum class EncoderPosition { motor, joint, NA };
 
   ModeOfOperationEnum modeOfOperationEnum{ModeOfOperationEnum::NA};
   RxPdoTypeEnum rxPdoTypeEnum{RxPdoTypeEnum::NA};

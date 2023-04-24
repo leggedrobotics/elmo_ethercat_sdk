@@ -16,111 +16,102 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 
 #pragma once
 
 #include "elmo_ethercat_sdk/Command.hpp"
-#include"elmo_ethercat_sdk/DriveState.hpp"
-#include "elmo_ethercat_sdk/Reading.hpp"
 #include "elmo_ethercat_sdk/Controlword.hpp"
+#include "elmo_ethercat_sdk/DriveState.hpp"
+#include "elmo_ethercat_sdk/Reading.hpp"
 
 #include <ethercat_sdk_master/EthercatDevice.hpp>
 
 #include <yaml-cpp/yaml.h>
 
-#include <mutex>
 #include <atomic>
-#include <string>
-#include <cstdint>
 #include <chrono>
+#include <condition_variable>
+#include <cstdint>
+#include <mutex>
+#include <string>
 
 namespace elmo {
-  class Elmo : public ecat_master::EthercatDevice{
-    public:
-      typedef std::shared_ptr<Elmo> SharedPtr;
+class Elmo : public ecat_master::EthercatDevice {
+ public:
+  typedef std::shared_ptr<Elmo> SharedPtr;
 
-      // create Elmo Drive from setup file
-      static SharedPtr deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address);
-      // constructor
-      Elmo() = default;
-      Elmo(const std::string& name, const uint32_t address);
+  // create Elmo Drive from setup file
+  static SharedPtr deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address);
+  // constructor
+  Elmo() = default;
+  Elmo(const std::string& name, const uint32_t address);
 
-    // pure virtual overwrites
-    public:
-      bool startup() override;
-      void shutdown() override;
-      void updateWrite() override;
-      void updateRead() override;
-      PdoInfo getCurrentPdoInfo() const override { return pdoInfo_; }
+  // pure virtual overwrites
+ public:
+  bool startup() override;
+  void shutdown() override;
+  void updateWrite() override;
+  void updateRead() override;
+  PdoInfo getCurrentPdoInfo() const override { return pdoInfo_; }
 
-    public:
-      void stageCommand(const Command& command);
-      Reading getReading() const;
-      void getReading(Reading& reading) const;
+ public:
+  void stageCommand(const Command& command);
+  Reading getReading() const;
+  void getReading(Reading& reading) const;
 
-      bool loadConfigFile(const std::string& fileName);
-      bool loadConfigNode(YAML::Node configNode);
-      bool loadConfiguration(const Configuration& configuration);
-      Configuration getConfiguration() const;
+  bool loadConfigFile(const std::string& fileName);
+  bool loadConfigNode(YAML::Node configNode);
+  bool loadConfiguration(const Configuration& configuration);
+  Configuration getConfiguration() const;
 
-    //SDO
-    public:
-      bool getStatuswordViaSdo(Statusword& statusword);
-      bool setControlwordViaSdo(Controlword& controlword);
-      bool setDriveStateViaSdo(const DriveState& driveState);
-    protected:
-      bool stateTransitionViaSdo(const StateTransition& stateTransition);
+  // SDO
+ public:
+  bool getStatuswordViaSdo(Statusword& statusword);
+  bool setControlwordViaSdo(Controlword& controlword);
+  bool setDriveStateViaSdo(const DriveState& driveState);
 
-    // PDO
-    public:
-      bool setDriveStateViaPdo(const DriveState& driveState, const bool waitForState);
-      bool lastPdoStateChangeSuccessful() const { return stateChangeSuccessful_; }
+  // PDO
+ public:
+  bool setDriveStateViaPdo(const DriveState& driveState, bool waitForState);
+  bool lastPdoStateChangeSuccessful() const { return stateChangeSuccessful_; }
 
-    // Other
-      double getActual5vVoltage() { return actual5vVoltage_; }
+  // Other
+  double getActual5vVoltage() { return actual5vVoltage_; }
 
-    protected:
-      void engagePdoStateMachine();
-      bool mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum);
-      Controlword getNextStateTransitionControlword(const DriveState& requestedDriveState,
-                                                    const DriveState& currentDriveState);
-      void autoConfigurePdoSizes();
+ private:
+  void engagePdoStateMachine();
+  bool stateTransitionViaSdo(const StateTransition& stateTransition);
+  bool mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum);
+  Controlword getNextStateTransitionControlword(const DriveState& requestedDriveState, const DriveState& currentDriveState);
+  void autoConfigurePdoSizes();
+  uint16_t getTxPdoSize();
+  uint16_t getRxPdoSize();
 
-      uint16_t getTxPdoSize();
-      uint16_t getRxPdoSize();
+  mutable std::mutex stagedCommandMutex_;
+  Command stagedCommand_;
 
-    // Errors
-    protected:
-      void addErrorToReading(const ErrorType& errorType);
+  mutable std::mutex readingMutex_;
+  Reading reading_;
 
+  Configuration configuration_;
+  Controlword controlword_;
+  PdoInfo pdoInfo_;
+  uint16_t numberOfSuccessfulTargetStateReadings_{0};
 
+  DriveState prevDriveState_{DriveState::NA};
+  mutable std::mutex targetStateMutex_;
+  DriveState targetDriveState_{DriveState::NA};
+  std::atomic<bool> stateChangeSuccessful_{false};
+  std::atomic<bool> conductStateChange_{false};
 
-    protected:
-      Command stagedCommand_;
-      Reading reading_;
-      Configuration configuration_;
-      Controlword controlword_;
-      PdoInfo pdoInfo_;
-      bool hasRead_{false};
-      bool conductStateChange_{false};
-      DriveState targetDriveState_{DriveState::NA};
-      std::chrono::time_point<std::chrono::steady_clock> driveStateChangeTimePoint_;
-      uint16_t numberOfSuccessfulTargetStateReadings_{0};
-      std::atomic<bool> stateChangeSuccessful_{false};
+  std::mutex driveStateMachineSyncMutex_;  // only for blocking call to setDriveStateViaPdo
+  std::condition_variable cvDriveStateMachineSync_;
 
-      // actual voltage on 5v line (e.g. to configure analog sensors)
-      double actual5vVoltage_{5.0};
+  // actual voltage on 5v line (e.g. to configure analog sensors)
+  double actual5vVoltage_{5.0};
 
-    // Configurable parameters
-    protected:
-      bool allowModeChange_{false};
-      ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
-
-    protected:
-      mutable std::recursive_mutex stagedCommandMutex_; //TODO required?
-      mutable std::recursive_mutex readingMutex_; //TODO required?
-      mutable std::recursive_mutex mutex_; // TODO: change name!!!!
-
-  };
-} // namespace elmo
+  bool allowModeChange_{false};
+  ModeOfOperationEnum modeOfOperation_{ModeOfOperationEnum::NA};
+};
+}  // namespace elmo

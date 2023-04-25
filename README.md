@@ -5,8 +5,6 @@ This is a C++ library providing a high-level interface for controlling [Elmo](ht
 
 The lower level EtherCAT communication is handled by the [soem_interface](https://github.com/leggedrobotics/soem_interface) library.
 
-The elmo_ethercat_sdk is developed on Ubuntu 20.04 LTS with [ROS Noetic](https://wiki.ros.org/noetic).
-
 The source code is released under the GPLv3 license.
 A copy of the license is available in the *COPYING* file.
 
@@ -20,38 +18,35 @@ A copy of the license is available in the *COPYING* file.
 
 ### Dependencies
 
-#### Catkin Packages
+#### Ament Packages
 
-| Repo                | url                                                   | License      | Content                             |
-|:-------------------:|:-----------------------------------------------------:|:------------:|:-----------------------------------:|
-| soem_interface      | https://github.com/leggedrobotics/soem_interface.git  | GPLv3        | Low-level EtherCAT functionalities  |
-| ethercat_sdk_master | https://github.com/leggedrobotics/ethercat_sdk_master | BSD 3-Clause | High-level EtherCAT functionalities |
-| message_logger      | https://github.com/leggedrobotics/message_logger.git  | BSD 3-Clause | simple log streams                  |
+Use the `setup/setup_ws.repos` file together with [vcs](https://github.com/dirk-thomas/vcstool):
+    
+    vcs import < src/elmo_ethercat_sdk/setup/setup_ws.repos
 
 #### System Dependencies (Ubuntu 20.04 LTS)
 
-- [ROS Noetic](https://wiki.ros.org/noetic)
-- catkin
+- [ROS Humble](https://docs.ros.org/en/humble/index.html) for colcon / ament build system.
 - yaml-cpp
 
-> Likely to work on Ubuntu 18.04 with ROS Melodic
+> Likely to work on Ubuntu 22.04
 
 ### Building from Source
 
 To build the library from source, clone the latest version from this repository and from the dependencies into your catkin workspace and compile the package using
 
-	cd catkin_workspace/src
-	git clone https://github.com/leggedrobotics/soem_interface.git
-    git clone https://github.com/leggedrobotics/ethercat_sdk_master.git
-    git clone https://github.com/leggedrobotics/message_logger.git
-    git clone https://github.com/leggedrobotics/elmo_ethercat_sdk.git
-	cd ../
-	catkin build elmo_ethercat 
+	mkdir -p elmo_test_workspace/src 
+    cd elmo_test_workspace/src
+    git clone  git@github.com:leggedrobotics/elmo_ethercat_sdk.git
+    cd ..
+    vcs import < src/elmo_ethercat_sdk/setup/setup_ws.repos
+	source src/elmo_ethercat_sdk/setup/build.sh
 
-To build the examples, execute the following command inside of your catkin workspace:
-	
-	catkin build elmo_examples
-	
+## Usage
+
+The repos `ethercat_device_configurator` contains an example `standalone.cpp` of how to use one of the sdks.
+It is build as part of the building process explained above.
+**Note it command per default a constant velocity, so make sure your motor is freely spinning! Also check your hardware before running.**
 
 ## Firmware version
 This library is known to work with the following firmware versions:

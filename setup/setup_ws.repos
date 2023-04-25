@@ -1,0 +1,21 @@
+repositories:
+  src/elmo_ethercat_sdk:
+    type: git
+    url: git@github.com:leggedrobotics/elmo_ethercat_sdk.git
+    version: feature/ament_cmake
+  src/ethercat_device_configurator:
+    type: git
+    url: git@github.com:leggedrobotics/ethercat_device_configurator.git
+    version: feature/ament_cmake
+  src/ethercat_sdk_master:
+    type: git
+    url: git@github.com:leggedrobotics/ethercat_sdk_master.git
+    version: feature/ament_package
+  src/message_logger:
+    type: git
+    url: git@github.com:leggedrobotics/message_logger.git
+    version: foxy
+  src/soem_interface:
+    type: git
+    url: git@github.com:leggedrobotics/soem_interface.git
+    version: feature/ament_package

@@ -37,9 +37,10 @@ To build the library from source, clone the latest version from this repository 
 
 	mkdir -p elmo_test_workspace/src 
     cd elmo_test_workspace/src
-    git clone  git@github.com:leggedrobotics/elmo_ethercat_sdk.git
+    git clone -b feature/ament_cmake git@github.com:leggedrobotics/elmo_ethercat_sdk.git
     cd ..
-    vcs import < src/elmo_ethercat_sdk/setup/setup_ws.repos
+    vcs import < src/elmo_ethercat_sdk/setup/setup_ws.repos --recursive
+    <source your humble installation depends how you installed ros> source /opt/ros/humble/setup.bash 
 	source src/elmo_ethercat_sdk/setup/build.sh
 
 ## Usage
@@ -47,6 +48,9 @@ To build the library from source, clone the latest version from this repository 
 The repos `ethercat_device_configurator` contains an example `standalone.cpp` of how to use one of the sdks.
 It is build as part of the building process explained above.
 **Note it command per default a constant velocity, so make sure your motor is freely spinning! Also check your hardware before running.**
+Run it with:
+
+    ros2 run ethercat_device_configurator standalone <absolute path to setup.yaml file, see example config dictonary> 
 
 ## Firmware version
 This library is known to work with the following firmware versions:

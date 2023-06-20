@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the elmo_ethercat_sdk. If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.6)
 project(elmo_ethercat_sdk)
 
 ## Set the C++ standard.

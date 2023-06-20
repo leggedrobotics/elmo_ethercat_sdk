@@ -66,7 +66,7 @@ Elmo::Elmo(const std::string& name, const uint32_t address) {
 
 bool Elmo::startup() {
   bool success = true;
-  success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
+  success &= bus_->waitForState(soem_interface_rsl::ETHERCAT_SM_STATE::PRE_OP, address_);
   bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_ / 2.f);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -111,7 +111,7 @@ bool Elmo::startup() {
 }
 
 void Elmo::shutdown() {
-  bus_->setState(EC_STATE_INIT, address_);
+  bus_->setState(soem_interface_rsl::ETHERCAT_SM_STATE::INIT, address_);
 }
 
 void Elmo::updateWrite() {

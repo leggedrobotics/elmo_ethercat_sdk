@@ -26,7 +26,7 @@
 #include "elmo_ethercat_sdk/Reading.hpp"
 
 #include <ethercat_sdk_master/EthercatDevice.hpp>
-
+#include "ethercat_sdk_master/farbot/RealtimeObject.hpp"
 #include <yaml-cpp/yaml.h>
 
 #include <atomic>
@@ -51,14 +51,14 @@ class Elmo : public ecat_master::EthercatDevice {
  public:
   bool startup() override;
   void shutdown() override;
-  void updateWrite() override;
-  void updateRead() override;
+  void updateWrite() override; //called in the rt thread
+  void updateRead() override; //called in the rt thread
   PdoInfo getCurrentPdoInfo() const override { return pdoInfo_; }
 
  public:
   void stageCommand(const Command& command);
-  Reading getReading() const;
-  void getReading(Reading& reading) const;
+  Reading getReading();
+  void getReading(Reading& reading);
 
   bool loadConfigFile(const std::string& fileName);
   bool loadConfigNode(YAML::Node configNode);
@@ -88,11 +88,13 @@ class Elmo : public ecat_master::EthercatDevice {
   uint16_t getTxPdoSize();
   uint16_t getRxPdoSize();
 
-  mutable std::mutex stagedCommandMutex_;
-  Command stagedCommand_;
+  //Commands written or replaced by the non rt thread (application / user thread), read only by the RT thread (=ethercat thread)
+  using NonRTMutableCommand = farbot::RealtimeObject<Command, farbot::RealtimeObjectOptions::nonRealtimeMutatable>;
+  NonRTMutableCommand stagedCommand_;
 
-  mutable std::mutex readingMutex_;
-  Reading reading_;
+  //Reading gets written by the ethercat thread (therefore has to be rt mutable)
+  using RTMutableReading = farbot::RealtimeObject<Reading, farbot::RealtimeObjectOptions::realtimeMutatable>;
+  RTMutableReading reading_; //mutable to ensure const correctness.
 
   Configuration configuration_;
   Controlword controlword_;
@@ -101,6 +103,7 @@ class Elmo : public ecat_master::EthercatDevice {
 
   DriveState prevDriveState_{DriveState::NA};
   mutable std::mutex targetStateMutex_;
+  // todo transform to a nonRealtimeMutableObject?
   DriveState targetDriveState_{DriveState::NA};
   std::atomic<bool> stateChangeSuccessful_{false};
   std::atomic<bool> conductStateChange_{false};

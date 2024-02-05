@@ -59,7 +59,8 @@ Elmo::SharedPtr Elmo::deviceFromFile(const std::string& configFile, const std::s
   return elmo;
 }
 
-Elmo::Elmo(const std::string& name, const uint32_t address) {
+Elmo::Elmo(const std::string& name, const uint32_t address)
+      {
   address_ = address;
   name_ = name;
 }
@@ -76,8 +77,9 @@ bool Elmo::startup() {
     success &= sendSdoRead(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
     // update the configuration to accomodate the new motor rated current value
     configuration_.motorRatedCurrentA = static_cast<double>(motorRatedCurrent) / 1000.0;
-    // update the reading_ object to ensure correct unit conversion
-    reading_.configureReading(configuration_);
+    // update the reading_ object to ensure correct unit conversion -> has to be done in realtime context since only rt mutable.
+    RTMutableReading::ScopedAccess<farbot::ThreadType::realtime> readingAccess(reading_);
+    readingAccess->configureReading(configuration_);
   }
   success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
   // PDO mapping
@@ -117,9 +119,9 @@ void Elmo::shutdown() {
 void Elmo::updateWrite() {
   /*
   ** Check if the Mode of Operation has been set properly
-  */
+//  */
   if (modeOfOperation_ == ModeOfOperationEnum::NA) {
-    reading_.addError(ErrorType::ModeOfOperationError);
+//    reading_.addError(ErrorType::ModeOfOperationError);
     MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateWrite] Mode of operation for '" << name_ << "' has not been set.");
     return;
   }
@@ -135,13 +137,13 @@ void Elmo::updateWrite() {
     case RxPdoTypeEnum::RxPdoStandard: {
       RxPdoStandard rxPdo{};
       {
-        std::lock_guard<std::mutex> stagedCmdLock(stagedCommandMutex_);
-        rxPdo.targetPosition_ = stagedCommand_.getTargetPositionRaw() * configuration_.direction;
-        rxPdo.targetVelocity_ = stagedCommand_.getTargetVelocityRaw() * configuration_.direction;
-        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
-        rxPdo.maxTorque_ = stagedCommand_.getMaxTorqueRaw();
+        NonRTMutableCommand::ScopedAccess<farbot::ThreadType::realtime> stagedCommand(stagedCommand_);
+        rxPdo.targetPosition_ = stagedCommand->getTargetPositionRaw() * configuration_.direction;
+        rxPdo.targetVelocity_ = stagedCommand->getTargetVelocityRaw() * configuration_.direction;
+        rxPdo.targetTorque_ = stagedCommand->getTargetTorqueRaw() * static_cast<int16_t>(configuration_.direction);
+        rxPdo.maxTorque_ = stagedCommand->getMaxTorqueRaw();
         rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
-        rxPdo.torqueOffset_ = stagedCommand_.getTorqueOffsetRaw() * configuration_.direction;
+        rxPdo.torqueOffset_ = stagedCommand->getTorqueOffsetRaw() * static_cast<int16_t>(configuration_.direction);
         rxPdo.controlWord_ = controlword_.getRawControlword();
       }
 
@@ -151,8 +153,8 @@ void Elmo::updateWrite() {
     case RxPdoTypeEnum::RxPdoCST: {
       RxPdoCST rxPdo{};
       {
-        std::lock_guard<std::mutex> stagedCmdLock(stagedCommandMutex_);
-        rxPdo.targetTorque_ = stagedCommand_.getTargetTorqueRaw() * configuration_.direction;
+        NonRTMutableCommand::ScopedAccess<farbot::ThreadType::realtime> stagedCommand(stagedCommand_);
+        rxPdo.targetTorque_ = stagedCommand->getTargetTorqueRaw() * static_cast<int16_t>(configuration_.direction);
         rxPdo.modeOfOperation_ = static_cast<int8_t>(modeOfOperation_);
         rxPdo.controlWord_ = controlword_.getRawControlword();
       }
@@ -166,86 +168,86 @@ void Elmo::updateWrite() {
 }
 
 void Elmo::updateRead() {
+  RTMutableReading::ScopedAccess<farbot::ThreadType::realtime> reading(reading_);
   switch (configuration_.txPdoTypeEnum) {
     case TxPdoTypeEnum::TxPdoStandard: {
       TxPdoStandard txPdo{};
       // reading from the bus
       bus_->readTxPdo(address_, txPdo);
-      reading_.setActualPosition(txPdo.actualPosition_ * configuration_.direction);
-      reading_.setDigitalInputs(txPdo.digitalInputs_);
-      reading_.setActualVelocity(txPdo.actualVelocity_ * configuration_.direction);
-      reading_.setStatusword(txPdo.statusword_);
-      reading_.setAnalogInput(txPdo.analogInput_);
-      reading_.setActualCurrent(txPdo.actualCurrent_ * configuration_.direction);
-      reading_.setBusVoltage(txPdo.busVoltage_);
+      reading->setActualPosition(txPdo.actualPosition_ * static_cast<int16_t>(configuration_.direction));
+      reading->setDigitalInputs(txPdo.digitalInputs_);
+      reading->setActualVelocity(txPdo.actualVelocity_ * static_cast<int16_t>(configuration_.direction));
+      reading->setStatusword(txPdo.statusword_);
+      reading->setAnalogInput(txPdo.analogInput_);
+      reading->setActualCurrent(txPdo.actualCurrent_ * static_cast<int16_t>(configuration_.direction));
+      reading->setBusVoltage(txPdo.busVoltage_);
     } break;
     case TxPdoTypeEnum::TxPdoCST: {
       TxPdoCST txPdo{};
       // reading from the bus
       bus_->readTxPdo(address_, txPdo);
-      reading_.setActualPosition(txPdo.actualPosition_ * configuration_.direction);
-      reading_.setActualCurrent(txPdo.actualTorque_ * configuration_.direction);  /// torque readings are actually current readings,
+      reading->setActualPosition(txPdo.actualPosition_ * static_cast<int16_t>(configuration_.direction));
+      reading->setActualCurrent(txPdo.actualTorque_ * static_cast<int16_t>(configuration_.direction));  /// torque readings are actually current readings,
                                                                                   /// the conversion is handled later
-      reading_.setStatusword(txPdo.statusword_);
-      reading_.setActualVelocity(txPdo.actualVelocity_ * configuration_.direction);
+      reading->setStatusword(txPdo.statusword_);
+      reading->setActualVelocity(txPdo.actualVelocity_ * static_cast<int16_t>(configuration_.direction));
     } break;
 
     default:
       MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateRrite] Unsupported Tx Pdo type for '" << name_ << "'");
-      reading_.addError(ErrorType::TxPdoTypeError);
   }
 
   // Print warning if drive is in Fault state.
-  if (reading_.getDriveState() == DriveState::Fault) {
+  if (reading->getDriveState() == DriveState::Fault) {
     MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateRead] '" << name_ << "' is in drive state 'Fault'");
   }
 }
 
 void Elmo::stageCommand(const Command& command) {
-  std::lock_guard<std::mutex> lock(stagedCommandMutex_);
-  stagedCommand_ = command;
+  //called by the non realtime user thread.
+  NonRTMutableCommand::ScopedAccess<farbot::ThreadType::nonRealtime> cmdAccess(stagedCommand_);
   if (configuration_.encoderPosition == Configuration::EncoderPosition::joint) {
-    stagedCommand_.setPositionFactorRadToInteger(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
-    stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+    cmdAccess->setPositionFactorRadToInteger(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
+    cmdAccess->setVelocityFactorRadPerSecToIntegerPerSec(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI));
   } else if (configuration_.encoderPosition == Configuration::EncoderPosition::motor) {
-    stagedCommand_.setPositionFactorRadToInteger(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI) *
+    cmdAccess->setPositionFactorRadToInteger(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI) *
                                                  configuration_.gearRatio);
-    stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI) *
+    cmdAccess->setVelocityFactorRadPerSecToIntegerPerSec(static_cast<double>(configuration_.positionEncoderResolution) / (2.0 * M_PI) *
                                                              configuration_.gearRatio);
   } else {
-    stagedCommand_.setPositionFactorRadToInteger(0.0);
-    stagedCommand_.setVelocityFactorRadPerSecToIntegerPerSec(0.0);
+    cmdAccess->setPositionFactorRadToInteger(0.0);
+    cmdAccess->setVelocityFactorRadPerSecToIntegerPerSec(0.0);
   }
 
   double currentFactorAToInt = 1000.0 / configuration_.motorRatedCurrentA;
-  stagedCommand_.setCurrentFactorAToInteger(currentFactorAToInt);
-  stagedCommand_.setTorqueFactorNmToInteger(currentFactorAToInt / configuration_.motorConstant / configuration_.gearRatio);
+  cmdAccess->setCurrentFactorAToInteger(currentFactorAToInt);
+  cmdAccess->setTorqueFactorNmToInteger(currentFactorAToInt / configuration_.motorConstant / configuration_.gearRatio);
 
-  stagedCommand_.setMaxCurrent(configuration_.maxCurrentA);
-  stagedCommand_.setMaxTorque(configuration_.maxCurrentA * configuration_.motorConstant * configuration_.gearRatio);
+  cmdAccess->setMaxCurrent(configuration_.maxCurrentA);
+  cmdAccess->setMaxTorque(configuration_.maxCurrentA * configuration_.motorConstant * configuration_.gearRatio);
 
-  stagedCommand_.setUseRawCommands(configuration_.useRawCommands);
+  cmdAccess->setUseRawCommands(configuration_.useRawCommands);
 
-  stagedCommand_.doUnitConversion();
+  cmdAccess->doUnitConversion();
 
-  if (allowModeChange_ && command.getModeOfOperation() != ModeOfOperationEnum::NA) {
-    modeOfOperation_ = command.getModeOfOperation();
+  if (allowModeChange_ && cmdAccess->getModeOfOperation() != ModeOfOperationEnum::NA) {
+    modeOfOperation_ = cmdAccess->getModeOfOperation();
   } else {
-    if (modeOfOperation_ != command.getModeOfOperation() && command.getModeOfOperation() != ModeOfOperationEnum::NA) {
+    if (modeOfOperation_ != cmdAccess->getModeOfOperation() && cmdAccess->getModeOfOperation() != ModeOfOperationEnum::NA) {
       MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::stageCommand] Changing the mode of operation of '"
                         << name_ << "' is not allowed for the active configuration.");
     }
   }
 }
 
-Reading Elmo::getReading() const {
-  std::lock_guard<std::mutex> lock(readingMutex_);
-  return reading_;
+Reading Elmo::getReading() {
+  RTMutableReading::ScopedAccess<farbot::ThreadType::nonRealtime> readingAccess(reading_);
+  return *readingAccess;
 }
 
-void Elmo::getReading(Reading& reading) const {
-  std::lock_guard<std::mutex> lock(readingMutex_);
-  reading = reading_;
+void Elmo::getReading(Reading& reading) {
+  RTMutableReading::ScopedAccess<farbot::ThreadType::nonRealtime> readingAccess(reading_);
+  reading = *readingAccess;
 }
 
 bool Elmo::loadConfigFile(const std::string& fileName) {
@@ -259,7 +261,11 @@ bool Elmo::loadConfigNode(YAML::Node configNode) {
 }
 
 bool Elmo::loadConfiguration(const Configuration& configuration) {
-  reading_.configureReading(configuration);
+
+  {
+    RTMutableReading::ScopedAccess<farbot::ThreadType::realtime> readingAccess(reading_);
+    readingAccess->configureReading(configuration);
+  }
 
   // Check if changing mode of operation will be allowed
   allowModeChange_ = true;
@@ -267,6 +273,7 @@ bool Elmo::loadConfiguration(const Configuration& configuration) {
   allowModeChange_ &= (configuration.rxPdoTypeEnum == RxPdoTypeEnum::RxPdoStandard);
   allowModeChange_ &= (configuration.txPdoTypeEnum == TxPdoTypeEnum::TxPdoStandard);
 
+  //todo sync with some atomics to ensure that config is completed before we start ethercat rt thread?
   modeOfOperation_ = configuration.modeOfOperationEnum;
 
   configuration_ = configuration;
@@ -794,12 +801,13 @@ uint16_t Elmo::getRxPdoSize() {
 }
 
 void Elmo::engagePdoStateMachine() {
+  // only in RT thread.
   // get the current state
   // read value
   DriveState currentDriveState;
   {
-    std::lock_guard<std::mutex> readingLock(readingMutex_);
-    currentDriveState = reading_.getDriveState();
+    RTMutableReading::ScopedAccess<farbot::ThreadType::realtime> readingScopeAccess(reading_);
+    currentDriveState = readingScopeAccess->getDriveState();
   }
 
   // check if the state change already was successful:

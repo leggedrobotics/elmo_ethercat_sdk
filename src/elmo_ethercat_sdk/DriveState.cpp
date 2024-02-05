@@ -20,6 +20,7 @@
 
 #include "elmo_ethercat_sdk/DriveState.hpp"
 
+namespace elmo {
 std::ostream& operator<<(std::ostream& os, const elmo::DriveState& driveState) {
   switch (driveState) {
     case elmo::DriveState::NotReadyToSwitchOn:
@@ -52,3 +53,5 @@ std::ostream& operator<<(std::ostream& os, const elmo::DriveState& driveState) {
   }
   return os;
 }
+
+} //namespace

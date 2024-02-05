@@ -131,7 +131,8 @@ class Reading {
 
 };
 
+std::ostream& operator<<(std::ostream& os, const Reading& reading);
+
 }  // namespace elmo
 
-// stream operator in global namespace
-std::ostream& operator<<(std::ostream& os, const elmo::Reading& reading);
+

@@ -19,6 +19,7 @@
 */
 
 #include "elmo_ethercat_sdk/PdoTypeEnum.hpp"
+namespace elmo{
 
 std::ostream& operator<<(std::ostream& os, const elmo::TxPdoTypeEnum& txPdoTypeEnum) {
   switch (txPdoTypeEnum) {
@@ -51,4 +52,6 @@ std::ostream& operator<<(std::ostream& os, const elmo::RxPdoTypeEnum& rxPdoTypeE
       break;
   }
   return os;
+}
+
 }
